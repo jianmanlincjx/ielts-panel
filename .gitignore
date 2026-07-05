@@ -1,0 +1,8 @@
+# Mac 系统垃圾
+.DS_Store
+._*
+
+# 编辑器
+.vscode/
+.idea/
+*.swp

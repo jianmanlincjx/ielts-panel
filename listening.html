@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>雅思听力考词 · 学习面板</title>
+<style>
+  :root{
+    --bg:#f4f6fa; --card:#fff; --line:#e6e9f0; --box:#eef1f6;
+    --txt:#1e2330; --dim:#8990a4; --green:#22c55e; --greenBd:#86efac;
+    --red:#ef4444; --accent:#6c5ce7; --accent2:#8b7cf6; --amber:#f59e0b;
+    --sh:0 2px 10px rgba(30,40,80,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt)}
+  .topbar{background:rgba(244,246,250,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    padding:14px 24px;display:flex;align-items:center;gap:16px}
+  .brand{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px;cursor:pointer;flex:0 0 auto}
+  .crumb{display:flex;align-items:center;gap:8px;flex:1;min-width:0;overflow:hidden;flex-wrap:nowrap}
+  .crumb a,.crumb .cur{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:600;border-radius:9px;
+    padding:6px 13px;white-space:nowrap;line-height:1;text-decoration:none;transition:.15s}
+  .crumb a{background:#eef0f6;color:#5b6274;cursor:pointer;border:1px solid transparent}
+  .crumb a:hover{background:#e3e6f5;color:var(--accent);border-color:var(--accent2)}
+  .crumb .cur{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+    box-shadow:0 2px 8px rgba(108,92,231,.35);overflow:hidden;text-overflow:ellipsis;max-width:340px}
+  .crumb .sep{color:#c3c8d4;font-size:14px;flex:0 0 auto}
+  .btn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 16px;font-size:15px;cursor:pointer;font-weight:600;color:var(--txt)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none}
+  .btn.sm{padding:6px 12px;font-size:13px}
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:transparent}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px}
+  .hidden{display:none!important}
+
+  /* dashboard hero */
+  .hero{display:flex;gap:24px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 26px;box-shadow:var(--sh);flex-wrap:wrap}
+  .ring{--p:0;--c:var(--accent);width:104px;height:104px;border-radius:50%;flex:0 0 auto;
+    background:conic-gradient(var(--c) calc(var(--p)*1%),#e9ecf3 0);display:grid;place-items:center;position:relative}
+  .ring::after{content:'';position:absolute;inset:11px;background:var(--card);border-radius:50%}
+  .ring .val{position:relative;z-index:1;font-weight:800;font-size:22px}
+  .ring .val small{font-size:12px;color:var(--dim);font-weight:600}
+  .heroInfo{flex:1;min-width:220px}
+  .heroInfo h1{margin:0 0 4px;font-size:20px}
+  .heroStats{display:flex;gap:22px;flex-wrap:wrap;margin-top:10px}
+  .stat{font-size:13px;color:var(--dim)}
+  .stat b{display:block;font-size:20px;color:var(--txt)}
+  .heroActs{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+
+  .sectitle{font-size:15px;font-weight:700;margin:26px 4px 12px;display:flex;align-items:center;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+  .chcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--sh);cursor:pointer;transition:.15s;display:flex;gap:14px;align-items:center}
+  .chcard:hover{transform:translateY(-2px);border-color:var(--accent2)}
+  .miniring{--p:0;--c:var(--accent);width:56px;height:56px;border-radius:50%;flex:0 0 auto;
+    background:conic-gradient(var(--c) calc(var(--p)*1%),#e9ecf3 0);display:grid;place-items:center;position:relative}
+  .miniring::after{content:'';position:absolute;inset:7px;background:var(--card);border-radius:50%}
+  .miniring .e{position:relative;z-index:1;font-size:22px}
+  .chmeta{flex:1;min-width:0}
+  .chmeta .n{font-weight:700;font-size:15px}
+  .chmeta .s{color:var(--dim);font-size:12.5px;margin-top:3px}
+  .bar{height:6px;background:#e9ecf3;border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:.4s}
+  .bar.g>i{background:linear-gradient(90deg,#34d399,#22c55e)}
+  .segbar{display:flex;height:7px;background:#e9ecf3;border-radius:99px;overflow:hidden;margin-top:8px}
+  .segbar>span{display:block;height:100%;transition:.4s}
+  .accpill{font-size:12px;font-weight:700;color:var(--dim);background:#eef1f6;border-radius:99px;padding:2px 9px;white-space:nowrap}
+  .accpill.good{color:#16a34a;background:#e9f9ef} .accpill.bad{color:#dc2626;background:#fdeaea}
+
+  /* topic list (chapter drill-down) */
+  .toprow{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px;display:flex;align-items:center;gap:14px}
+  .toprow .tinfo{flex:1;min-width:0}
+  .toprow .tn{font-weight:700;font-size:15px}
+  .toprow .ts{color:var(--dim);font-size:12.5px;margin-top:2px}
+  .pctbadge{font-weight:800;font-size:15px;min-width:44px;text-align:right}
+  .pctbadge.done{color:var(--green)}
+
+  /* practice header */
+  .stickyhead{position:sticky;top:0;z-index:30}
+  .pbar{background:var(--card);border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .pg-progress{display:flex;align-items:center;gap:14px;flex:1 1 240px;min-width:200px}
+  .track{flex:1;height:10px;background:#e2e5ea;border-radius:99px;overflow:hidden;min-width:80px}
+  .track>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd93d,#ffb703);transition:.3s}
+  .count{font-weight:800;font-size:18px;min-width:66px;text-align:center;letter-spacing:.5px}
+  .pg-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toggles{display:flex;align-items:center;gap:12px}
+  .chk{display:inline-flex;align-items:center;gap:7px;font-size:15px;cursor:pointer;user-select:none;color:var(--txt)}
+  .chk input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+  .pbar select{border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:14px;background:#fff;color:var(--txt);cursor:pointer}
+  .seg{display:inline-flex;background:#e7e9ee;border-radius:12px;padding:4px}
+  .seg button{border:none;background:transparent;padding:9px 22px;border-radius:9px;font-size:15px;font-weight:700;color:var(--dim);cursor:pointer;transition:.15s}
+  .seg button.on{background:#fff;color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.14)}
+  .vdiv{width:1px;height:24px;background:var(--line)}
+  .kbdhint{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--dim)}
+  kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 7px;font-size:12px}
+
+  /* list mode */
+  .list{max-width:1180px;margin:8px auto 60px;padding:0 20px}
+  .item{display:flex;align-items:center;gap:14px;padding:9px 0}
+  .idx{color:var(--dim);font-size:13px;width:30px;text-align:right;flex:0 0 auto}
+  .prompt{flex:0 0 40%;max-width:500px;background:var(--box);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;min-height:58px}
+  .spk{font-size:20px;cursor:pointer;opacity:.7;flex:0 0 auto}.spk:hover{opacity:1}
+  .p-en{font-size:18px;font-weight:600}.p-cn{font-size:18px;color:#4b5162}
+  .p-both .p-en{margin-right:auto}
+  .prompt .placeholder{color:var(--dim);font-size:14px}
+  .dots{display:inline-flex;gap:3px;flex:0 0 auto;margin-left:auto}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#d3d8e3}
+  .dots i.f{background:var(--amber)} .dots i.m{background:var(--green)}
+  .ansfield{flex:1;position:relative}
+  .ansfield input{width:100%;border:2px solid var(--greenBd);border-radius:12px;padding:14px 48px 14px 18px;font-size:18px;background:#fff;outline:none;color:var(--txt)}
+  .ansfield input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+  .ansfield.correct input{border-color:var(--green);background:#f0fdf4}
+  .ansfield.wrong input{border-color:var(--red);background:#fef2f2}
+  .cat{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:22px;pointer-events:none}
+  .mark{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:19px;font-weight:700}
+  .correct .mark{color:var(--green)}.wrong .mark{color:var(--red)}
+  .sol{font-size:13px;color:var(--red);margin-top:4px}.sol b{color:var(--green)}
+
+  /* immersive */
+  .imm{max-width:600px;margin:26px auto;padding:0 20px;text-align:center}
+  .imm .topic{color:var(--accent);font-size:13px;margin-bottom:14px}
+  .imm .bigspk{font-size:64px;cursor:pointer;user-select:none;display:inline-block}.imm .bigspk:active{transform:scale(.9)}
+  .imm .immcn{font-size:24px;color:#4b5162;min-height:32px;margin:12px 0}
+  .imm .immen{font-size:19px;color:var(--dim);min-height:24px;letter-spacing:1px}
+  .imm input{width:100%;max-width:420px;text-align:center;font-size:24px;letter-spacing:1px;padding:15px;border-radius:14px;border:2px solid var(--greenBd);background:#fff;color:var(--txt);margin:16px auto;display:block;outline:none}
+  .imm input.correct{border-color:var(--green);background:#f0fdf4}.imm input.wrong{border-color:var(--red);background:#fef2f2}
+  .imm .fb{min-height:34px;font-size:19px;font-weight:700;margin:6px 0}
+  .imm .fb .ok{color:var(--green)}.imm .fb .bad{color:var(--red);text-decoration:line-through;font-weight:400;font-size:16px;margin-left:8px}
+  .imm .ctrls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+
+  .result{max-width:600px;margin:26px auto;padding:0 20px}
+  .result .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;box-shadow:var(--sh)}
+  .score{font-size:32px;font-weight:800;margin:6px 0}
+  .review{text-align:left;margin-top:14px}
+  .rw{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:15px}
+  .rw .ok{color:var(--green);font-weight:600}.rw .your{color:var(--red)}
+  @media(max-width:640px){.prompt{flex-basis:44%}.p-en,.p-cn{font-size:15px}.heroActs{width:100%}}
+</style>
+</head>
+<body>
+<div class="stickyhead">
+<div class="topbar">
+  <a href="index.html" style="text-decoration:none;color:#5b6274;font-size:13px;font-weight:600;background:#eef0f6;padding:6px 12px;border-radius:9px;flex:0 0 auto">← 面板</a>
+  <span class="brand" id="homeBtn">🐤 考词面板</span>
+  <span class="crumb" id="crumb"></span>
+</div>
+
+<!-- practice control bar (only visible during practice) -->
+<div class="pbar hidden" id="pbar">
+  <div class="pg-progress">
+    <span class="count" id="count">0/0</span>
+    <div class="track" id="track"><i id="prog"></i></div>
+  </div>
+  <div class="pg-right">
+    <div class="kbdhint"><kbd>Tab</kbd>重听<span style="margin:0 4px">·</span><kbd>Enter</kbd>下一个</div>
+    <div class="vdiv"></div>
+    <label class="chk">语速 <select id="optRate"><option value="0.7">慢</option><option value="0.85" selected>较慢</option><option value="1">正常</option></select></label>
+    <label class="chk">口音 <select id="optVoice"></select></label>
+    <label class="chk"><input type="checkbox" id="optShuffle"> 乱序</label>
+    <div class="vdiv"></div>
+    <div class="toggles">
+      <label class="chk"><input type="checkbox" id="tEn"> 原文</label>
+      <label class="chk"><input type="checkbox" id="tCn" checked> 翻译</label>
+    </div>
+    <div class="seg"><button id="mList" class="on">列表</button><button id="mImm">沉浸</button></div>
+    <button class="btn sm ghost" id="exitBtn">结束</button>
+  </div>
+</div>
+</div>
+
+<!-- ========== DASHBOARD ========== -->
+<div class="wrap" id="dashView">
+  <div class="hero">
+    <div class="ring" id="heroRing"><span class="val" id="heroPct">0<small>%</small></span></div>
+    <div class="heroInfo">
+      <h1>雅思听力考词 · 全部 747 词</h1>
+      <div class="heroStats">
+        <div class="stat"><b id="stMastered">0</b>已掌握</div>
+        <div class="stat"><b id="stLearning">0</b>学习中</div>
+        <div class="stat"><b id="stNew">747</b>未学</div>
+        <div class="stat"><b id="stAcc">—</b>历史正确率</div>
+      </div>
+      <div class="heroActs">
+        <button class="btn primary" id="quickAll">🎧 全部练习</button>
+        <button class="btn" id="quickWeak">⚡ 薄弱词专练</button>
+        <button class="btn ghost" id="resetBtn">重置进度</button>
+      </div>
+    </div>
+  </div>
+  <div class="sectitle">📚 按章节学习</div>
+  <div class="grid" id="chapterGrid"></div>
+</div>
+
+<!-- ========== CHAPTER DETAIL ========== -->
+<div class="wrap hidden" id="chapterView">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn sm" id="backHome">← 返回</button>
+    <h2 id="chTitle" style="margin:0;font-size:19px"></h2>
+    <button class="btn primary sm" id="practiceChapter" style="margin-left:auto">🎧 练习整章</button>
+    <button class="btn sm" id="practiceChapterWeak">⚡ 只练薄弱</button>
+  </div>
+  <div id="topicList"></div>
+</div>
+
+<!-- ========== PRACTICE ========== -->
+<div class="list hidden" id="listView"></div>
+<div class="imm hidden" id="immView">
+  <div class="topic" id="immTopic"></div>
+  <div class="bigspk" id="immSpk">🔊</div>
+  <div class="immcn" id="immCn"></div>
+  <div class="immen" id="immEn"></div>
+  <input id="immInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="输入听到的单词…">
+  <div class="fb" id="immFb"></div>
+  <div class="ctrls">
+    <button class="btn" id="immReplay">🔊 重听 (Tab)</button>
+    <button class="btn primary" id="immCheck">检查 / 下一个 (Enter)</button>
+    <button class="btn" id="immSkip">不会</button>
+  </div>
+</div>
+<div class="result hidden" id="resultView"></div>
+
+<script>
+const APP = {"chapters": [{"name": "历史·考古", "emoji": "🏛️"}, {"name": "自然·环境", "emoji": "🌋"}, {"name": "动物世界", "emoji": "🐘"}, {"name": "科技·工程", "emoji": "🔬"}, {"name": "艺术·影音", "emoji": "🎨"}, {"name": "社会·心理", "emoji": "💼"}, {"name": "农业·食物", "emoji": "🌾"}, {"name": "生活·休闲", "emoji": "🏕️"}, {"name": "补充词汇", "emoji": "📌"}], "topics": [{"title": "Underwater Archaeological Sites", "words": [{"w": "written", "h": "书面的"}, {"w": "lifestyle", "h": "生活方式"}, {"w": "technology", "h": "技术"}, {"w": "storm", "h": "暴风雨"}, {"w": "film", "h": "电影"}, {"w": "research", "h": "研究"}, {"w": "gun", "h": "枪"}, {"w": "map", "h": "地图"}, {"w": "gold", "h": "黄金"}, {"w": "coins", "h": "硬币"}], "ch": 0}, {"title": "How surtsey was formed", "words": [{"w": "volcano", "h": "火山"}, {"w": "smoke", "h": "烟"}, {"w": "flower", "h": "花"}, {"w": "grass", "h": "草"}, {"w": "bacteria", "h": "细菌"}, {"w": "carpet", "h": "地毯"}, {"w": "fossils", "h": "化石"}, {"w": "radio", "h": "收音机"}, {"w": "storm", "h": "暴风雨"}, {"w": "centuries", "h": "世纪"}], "ch": 1}, {"title": "transhumance", "words": [{"w": "vertical", "h": "垂直的"}, {"w": "cabin", "h": "小屋"}, {"w": "camel", "h": "骆驼"}, {"w": "young", "h": "年轻的"}, {"w": "farmers", "h": "农民"}, {"w": "grain", "h": "谷物"}, {"w": "clothing", "h": "衣服"}, {"w": "harvest", "h": "收获"}, {"w": "tents", "h": "帐篷"}, {"w": "intermediate", "h": "中级的"}], "ch": 6}, {"title": "补充词汇(第1列-4)", "words": [{"w": "exercises", "h": "练习"}, {"w": "toys", "h": "玩具"}, {"w": "breathing", "h": "呼吸"}, {"w": "diving", "h": "潜水"}, {"w": "safety", "h": "安全"}, {"w": "adults", "h": "成年人"}, {"w": "january", "h": "一月"}, {"w": "speed", "h": "速度"}, {"w": "hat", "h": "帽子"}, {"w": "locker", "h": "储物柜"}], "ch": 8}, {"title": "The Vikings", "words": [{"w": "coin", "h": "硬币"}, {"w": "weapons", "h": "武器"}, {"w": "sail", "h": "航行"}, {"w": "horn", "h": "号角"}, {"w": "fork", "h": "叉子"}, {"w": "salt", "h": "盐"}, {"w": "weapons", "h": "武器"}, {"w": "repair", "h": "修理"}, {"w": "poems", "h": "诗歌"}, {"w": "divorce", "h": "离婚"}], "ch": 0}, {"title": "history of bags and purses", "words": [{"w": "coins", "h": "硬币"}, {"w": "status", "h": "地位"}, {"w": "belt", "h": "腰带"}, {"w": "skirt", "h": "裙子"}, {"w": "marriage", "h": "婚姻"}, {"w": "spices", "h": "香料"}, {"w": "gifts", "h": "礼物"}, {"w": "zippers", "h": "拉链"}, {"w": "feminism", "h": "女权主义"}, {"w": "sports", "h": "运动"}], "ch": 0}, {"title": "the evolution and cultivation of vegetables", "words": [{"w": "government", "h": "政府"}, {"w": "weeds", "h": "杂草"}, {"w": "structure", "h": "结构"}, {"w": "water", "h": "水"}, {"w": "machine", "h": "机器"}, {"w": "spring", "h": "春天"}, {"w": "history", "h": "历史"}, {"w": "sunlight", "h": "阳光"}, {"w": "root", "h": "根"}, {"w": "taste", "h": "味道"}], "ch": 6}, {"title": "补充词汇(第2列-4)", "words": [{"w": "instructor", "h": "教练"}, {"w": "certificate", "h": "证书"}, {"w": "shoes", "h": "鞋子"}, {"w": "waterproof", "h": "防水的"}, {"w": "jeans", "h": "牛仔裤"}, {"w": "snack", "h": "零食"}, {"w": "bridge", "h": "桥"}, {"w": "doctor", "h": "医生"}, {"w": "photographs", "h": "照片"}, {"w": "club", "h": "俱乐部"}], "ch": 8}, {"title": "The history of extreme sports", "words": [{"w": "adventure", "h": "冒险"}, {"w": "helmets", "h": "头盔"}, {"w": "factory", "h": "工厂"}, {"w": "golf", "h": "高尔夫"}, {"w": "traditional", "h": "传统的"}, {"w": "enjoyment", "h": "享受"}, {"w": "training", "h": "训练"}, {"w": "fear", "h": "恐惧"}, {"w": "recreational", "h": "娱乐的"}, {"w": "participation", "h": "参与"}], "ch": 7}, {"title": "economics and trust", "words": [{"w": "kindness", "h": "善良"}, {"w": "poverty", "h": "贫穷"}, {"w": "face", "h": "脸"}, {"w": "interaction", "h": "互动"}, {"w": "obligation", "h": "义务"}, {"w": "process", "h": "过程"}, {"w": "cooperation", "h": "合作"}, {"w": "expectations", "h": "期望"}, {"w": "higher", "h": "更高的"}, {"w": "glue", "h": "胶水"}], "ch": 5}, {"title": "scottish case study", "words": [{"w": "oldest", "h": "最老的"}, {"w": "central", "h": "中心的"}, {"w": "railway", "h": "铁路"}, {"w": "transport", "h": "运输"}, {"w": "economy", "h": "经济"}, {"w": "horizontal", "h": "水平的"}, {"w": "equal", "h": "平等的"}, {"w": "sculpture", "h": "雕塑"}, {"w": "steel", "h": "钢"}, {"w": "stress", "h": "压力"}], "ch": 5}, {"title": "补充词汇(第3列-4)", "words": [{"w": "male", "h": "男性的"}, {"w": "drive", "h": "驾驶"}, {"w": "tuesday", "h": "星期二"}, {"w": "august", "h": "八月"}, {"w": "dinner", "h": "晚餐"}, {"w": "25", "h": "25"}, {"w": "16", "h": "16"}, {"w": "modern", "h": "现代的"}, {"w": "hospital", "h": "医院"}, {"w": "heated", "h": "加热的"}], "ch": 8}, {"title": "Elephant research in Amboseli", "words": [{"w": "mother", "h": "母亲"}, {"w": "layers", "h": "层"}, {"w": "rope", "h": "绳子"}, {"w": "rain", "h": "雨"}, {"w": "bones", "h": "骨头"}, {"w": "weight", "h": "重量"}, {"w": "walk", "h": "走"}, {"w": "danger", "h": "危险"}, {"w": "wild", "h": "野生的"}, {"w": "sensitive", "h": "敏感的"}], "ch": 2}, {"title": "early migration to America", "words": [{"w": "ice", "h": "冰"}, {"w": "animals", "h": "动物"}, {"w": "teeth", "h": "牙齿"}, {"w": "resources", "h": "资源"}, {"w": "weapons", "h": "武器"}, {"w": "boats", "h": "船"}, {"w": "plants", "h": "植物"}, {"w": "climate", "h": "气候"}, {"w": "navigational", "h": "导航的"}, {"w": "current", "h": "水流"}], "ch": 0}, {"title": "red king crab", "words": [{"w": "south", "h": "南方"}, {"w": "octopuses", "h": "章鱼"}, {"w": "shell", "h": "贝壳"}, {"w": "shallow", "h": "浅的"}, {"w": "coastlines", "h": "海岸线"}, {"w": "winter", "h": "冬天"}, {"w": "nets", "h": "网"}, {"w": "shore", "h": "海岸"}, {"w": "engineers", "h": "工程师"}, {"w": "scientists", "h": "科学家"}], "ch": 2}, {"title": "补充词汇(第4列-4)", "words": [{"w": "bicycle", "h": "自行车"}, {"w": "microwave", "h": "微波炉"}, {"w": "milk", "h": "牛奶"}, {"w": "cinema", "h": "电影院"}, {"w": "singing", "h": "唱歌"}, {"w": "comedy", "h": "喜剧"}, {"w": "talk", "h": "谈话"}, {"w": "palace", "h": "宫殿"}, {"w": "waitress", "h": "女服务员"}, {"w": "internet", "h": "互联网"}], "ch": 8}, {"title": "Graphical symbol", "words": [{"w": "commercial", "h": "商业的"}, {"w": "knowledge", "h": "知识"}, {"w": "lines", "h": "线条"}, {"w": "photography", "h": "摄影"}, {"w": "advertise", "h": "做广告"}, {"w": "foot", "h": "脚"}, {"w": "objects", "h": "物体"}, {"w": "newspapers", "h": "报纸"}, {"w": "packaging", "h": "包装"}, {"w": "math", "h": "数学"}], "ch": 3}, {"title": "early gold mining", "words": [{"w": "reward", "h": "奖励"}, {"w": "river", "h": "河流"}, {"w": "hotels", "h": "旅馆"}, {"w": "banks", "h": "银行"}, {"w": "concrete", "h": "混凝土"}, {"w": "flooding", "h": "洪水"}, {"w": "flour", "h": "面粉"}, {"w": "land", "h": "土地"}, {"w": "university", "h": "大学"}, {"w": "engineers", "h": "工程师"}], "ch": 0}, {"title": "plastics exhibition", "words": [{"w": "cotton", "h": "棉花"}, {"w": "milk", "h": "牛奶"}, {"w": "silk", "h": "丝绸"}, {"w": "laboratory", "h": "实验室"}, {"w": "chemist", "h": "化学家"}, {"w": "hard", "h": "硬的"}, {"w": "gases", "h": "气体"}, {"w": "light", "h": "光"}, {"w": "pens", "h": "钢笔"}, {"w": "car", "h": "汽车"}], "ch": 3}, {"title": "补充词汇(第5列-4)", "words": [{"w": "leaflet", "h": "传单"}, {"w": "keyboard", "h": "键盘"}, {"w": "family", "h": "家庭"}, {"w": "seat", "h": "座位"}, {"w": "report", "h": "报告"}, {"w": "market", "h": "市场"}, {"w": "smell", "h": "气味"}, {"w": "paint", "h": "油漆"}, {"w": "leak", "h": "泄漏"}, {"w": "noise", "h": "噪音"}], "ch": 8}, {"title": "History of Music in Britain", "words": [{"w": "factories", "h": "工厂"}, {"w": "immigration", "h": "移民"}, {"w": "industries", "h": "工业"}, {"w": "language", "h": "语言"}, {"w": "jobs", "h": "工作"}, {"w": "young", "h": "年轻的"}, {"w": "audiences", "h": "观众"}, {"w": "middle class", "h": "中产阶级"}, {"w": "classical", "h": "古典的"}, {"w": "recordings", "h": "录音"}], "ch": 4}, {"title": "dolphin intelligence", "words": [{"w": "nets", "h": "网"}, {"w": "smile", "h": "微笑"}, {"w": "rats", "h": "老鼠"}, {"w": "aware", "h": "意识到的"}, {"w": "instinctive", "h": "本能的"}, {"w": "walking", "h": "步行"}, {"w": "newspaper", "h": "报纸"}, {"w": "social", "h": "社会的"}, {"w": "whistle", "h": "口哨"}, {"w": "fight", "h": "打架"}], "ch": 2}, {"title": "office design", "words": [{"w": "typing", "h": "打字"}, {"w": "desks", "h": "书桌"}, {"w": "screen", "h": "屏幕"}, {"w": "share", "h": "分享"}, {"w": "privacy", "h": "隐私"}, {"w": "security", "h": "安全"}, {"w": "health", "h": "健康"}, {"w": "energy", "h": "能量"}, {"w": "training", "h": "训练"}, {"w": "noise", "h": "噪音"}], "ch": 7}, {"title": "补充词汇(第6列-4)", "words": [{"w": "laundry", "h": "洗衣"}, {"w": "garbage", "h": "垃圾"}, {"w": "february", "h": "二月"}, {"w": "afternoon", "h": "下午"}, {"w": "ice exercise", "h": "冰上运动"}, {"w": "painkillers", "h": "止痛药"}, {"w": "classic", "h": "经典的"}, {"w": "deposit", "h": "押金"}, {"w": "damage", "h": "损害"}, {"w": "light", "h": "光"}], "ch": 8}, {"title": "Impact of cars in Australia", "words": [{"w": "public", "h": "公共的"}, {"w": "uncomfortable", "h": "不舒服的"}, {"w": "freedom", "h": "自由"}, {"w": "taxes", "h": "税收"}, {"w": "government", "h": "政府"}, {"w": "polluted", "h": "被污染的"}, {"w": "lanes", "h": "车道"}, {"w": "relationship", "h": "关系"}, {"w": "advertisements", "h": "广告"}, {"w": "shopping malls", "h": "购物中心"}], "ch": 5}, {"title": "crocodile study", "words": [{"w": "satellite", "h": "卫星"}, {"w": "radio", "h": "收音机"}, {"w": "signal", "h": "信号"}, {"w": "navigate", "h": "导航"}, {"w": "people", "h": "人们"}, {"w": "helicopter", "h": "直升机"}, {"w": "head", "h": "头"}, {"w": "direct", "h": "直接的"}, {"w": "sun", "h": "太阳"}, {"w": "birds", "h": "鸟"}], "ch": 2}, {"title": "theatre club", "words": [{"w": "rehearsal", "h": "排练"}, {"w": "male", "h": "男性的"}, {"w": "costumes", "h": "服装"}, {"w": "tuesday", "h": "星期二"}, {"w": "august", "h": "八月"}, {"w": "dinner", "h": "晚餐"}, {"w": "twenty five", "h": "二十五"}, {"w": "sixteen", "h": "十六"}, {"w": "modern", "h": "现代的"}, {"w": "hospital", "h": "医院"}], "ch": 7}, {"title": "补充词汇(第7列-4)", "words": [{"w": "helmet", "h": "头盔"}, {"w": "repair kit", "h": "修理工具包"}, {"w": "reduction", "h": "减少"}, {"w": "clifton", "h": "克利夫顿"}, {"w": "france", "h": "法国"}, {"w": "director", "h": "导演"}, {"w": "sailing", "h": "航行"}, {"w": "diving", "h": "潜水"}, {"w": "jungle", "h": "丛林"}, {"w": "electronics", "h": "电子产品"}], "ch": 8}, {"title": "Life on the International Space Station", "words": [{"w": "fresh", "h": "新鲜的"}, {"w": "variety", "h": "多样性"}, {"w": "communication", "h": "交流"}, {"w": "sleep", "h": "睡眠"}, {"w": "water", "h": "水"}, {"w": "tools", "h": "工具"}, {"w": "instructions", "h": "说明"}, {"w": "testing", "h": "测试"}, {"w": "accent", "h": "口音"}, {"w": "safety", "h": "安全"}], "ch": 3}, {"title": "company outsourcing", "words": [{"w": "democratic", "h": "民主的"}, {"w": "internal website", "h": "内部网站"}, {"w": "transparency", "h": "透明度"}, {"w": "income", "h": "收入"}, {"w": "employee first", "h": "员工优先"}, {"w": "solution", "h": "解决方案"}, {"w": "promotion", "h": "晋升"}, {"w": "ticket", "h": "票"}, {"w": "vacation", "h": "假期"}, {"w": "ban", "h": "禁止"}], "ch": 5}, {"title": "southwest cycle path", "words": [{"w": "green ride", "h": "绿色出行"}, {"w": "map", "h": "地图"}, {"w": "guide", "h": "向导"}, {"w": "bird watching", "h": "观鸟"}, {"w": "hours", "h": "小时"}, {"w": "child seat", "h": "儿童座椅"}, {"w": "holiday", "h": "假期"}, {"w": "weather conditions", "h": "天气状况"}, {"w": "post office", "h": "邮局"}], "ch": 7}, {"title": "补充词汇(第8列-4)", "words": [{"w": "beach", "h": "海滩"}, {"w": "rooftop", "h": "屋顶"}, {"w": "museum", "h": "博物馆"}, {"w": "opera", "h": "歌剧"}, {"w": "donkey", "h": "驴"}, {"w": "lamb", "h": "羔羊"}, {"w": "kitchen", "h": "厨房"}, {"w": "dishwasher", "h": "洗碗机"}, {"w": "garage", "h": "车库"}, {"w": "recycling", "h": "回收"}], "ch": 8}, {"title": "Reintroducing the Beaver Population to Britain", "words": [{"w": "transport", "h": "运输"}, {"w": "protection", "h": "保护"}, {"w": "tail", "h": "尾巴"}, {"w": "migration", "h": "迁徙"}, {"w": "perfume", "h": "香水"}, {"w": "headaches", "h": "头痛"}, {"w": "tourism", "h": "旅游业"}, {"w": "flood", "h": "洪水"}, {"w": "nitrogen", "h": "氮"}, {"w": "insects", "h": "昆虫"}], "ch": 2}, {"title": "chimpanzee behaviours", "words": [{"w": "genetic", "h": "遗传的"}, {"w": "observation", "h": "观察"}, {"w": "tools", "h": "工具"}, {"w": "open", "h": "打开"}, {"w": "stone", "h": "石头"}, {"w": "symbols", "h": "符号"}, {"w": "river", "h": "河流"}, {"w": "density", "h": "密度"}], "ch": 2}, {"title": "skiing club consultation", "words": [{"w": "supermarket", "h": "超市"}, {"w": "underground", "h": "地下的"}, {"w": "midnight", "h": "午夜"}, {"w": "hot chocolate", "h": "热巧克力"}, {"w": "pizza", "h": "披萨"}, {"w": "advanced", "h": "高级的"}, {"w": "raining", "h": "下雨"}, {"w": "boots", "h": "靴子"}, {"w": "jeans", "h": "牛仔裤"}, {"w": "gloves", "h": "手套"}], "ch": 7}, {"title": "补充词汇(第9列-4)", "words": [{"w": "window", "h": "窗户"}, {"w": "power", "h": "力量"}, {"w": "value", "h": "价值"}, {"w": "month", "h": "月份"}, {"w": "orange", "h": "橙子"}, {"w": "trousers", "h": "裤子"}, {"w": "general", "h": "总体的"}, {"w": "zoom", "h": "变焦"}, {"w": "advertising", "h": "广告"}, {"w": "regional manager", "h": "区域经理"}], "ch": 8}, {"title": "Rubber-making process", "words": [{"w": "coconut", "h": "椰子"}, {"w": "mould", "h": "霉菌"}, {"w": "hands", "h": "手"}, {"w": "machinery", "h": "机械"}, {"w": "dried", "h": "干燥的"}, {"w": "traders", "h": "商人"}, {"w": "balls", "h": "球"}, {"w": "elastic", "h": "弹性的"}, {"w": "tires", "h": "轮胎"}, {"w": "Germany", "h": "德国"}], "ch": 3}, {"title": "Canadian maple syrup", "words": [{"w": "different", "h": "不同的"}, {"w": "meat", "h": "肉"}, {"w": "tradition", "h": "传统"}, {"w": "steam", "h": "蒸汽"}, {"w": "ice", "h": "冰"}, {"w": "medicine", "h": "药"}, {"w": "tax", "h": "税"}, {"w": "insects", "h": "昆虫"}, {"w": "competition", "h": "竞争"}, {"w": "healthy", "h": "健康的"}], "ch": 6}, {"title": "local festival plans", "words": [{"w": "theater", "h": "剧院"}, {"w": "bus station", "h": "公交车站"}, {"w": "cooking", "h": "烹饪"}, {"w": "plate", "h": "盘子"}, {"w": "river", "h": "河流"}, {"w": "parking", "h": "停车"}, {"w": "events", "h": "活动"}, {"w": "feedback", "h": "反馈"}], "ch": 7}, {"title": "补充词汇(第10列-4)", "words": [{"w": "security", "h": "安全"}, {"w": "kitchen", "h": "厨房"}, {"w": "basement", "h": "地下室"}, {"w": "gym", "h": "健身房"}, {"w": "furniture", "h": "家具"}, {"w": "hospital", "h": "医院"}, {"w": "cash", "h": "现金"}, {"w": "caravan", "h": "大篷车"}, {"w": "snowboarding", "h": "单板滑雪"}, {"w": "cakes", "h": "蛋糕"}], "ch": 8}, {"title": "The Mangrove Regeneration Project", "words": [{"w": "flooding", "h": "洪水"}, {"w": "firewood", "h": "柴火"}, {"w": "fertilizer", "h": "肥料"}, {"w": "trash", "h": "垃圾"}, {"w": "sand", "h": "沙子"}, {"w": "gray", "h": "灰色"}, {"w": "hothouse", "h": "温室"}, {"w": "rain", "h": "雨"}, {"w": "rabbit", "h": "兔子"}, {"w": "storm", "h": "暴风雨"}], "ch": 1}, {"title": "calotype photography in britain and france", "words": [{"w": "expensive", "h": "昂贵的"}, {"w": "painting", "h": "绘画"}, {"w": "realistic", "h": "现实的"}, {"w": "enlargement", "h": "放大"}, {"w": "studio", "h": "工作室"}, {"w": "books", "h": "书"}, {"w": "buildings", "h": "建筑物"}, {"w": "critics", "h": "评论家"}, {"w": "science", "h": "科学"}, {"w": "glass", "h": "玻璃"}], "ch": 4}, {"title": "how to become a volunteer", "words": [{"w": "hours", "h": "小时"}, {"w": "week", "h": "星期"}, {"w": "driver's license", "h": "驾照"}, {"w": "shopping", "h": "购物"}, {"w": "friendly", "h": "友好的"}, {"w": "display", "h": "展示"}, {"w": "rubbish", "h": "垃圾"}, {"w": "tent", "h": "帐篷"}], "ch": 7}, {"title": "补充词汇(第11列-4)", "words": [{"w": "mangoes", "h": "芒果"}, {"w": "back", "h": "背部"}, {"w": "trucks", "h": "卡车"}, {"w": "town", "h": "城镇"}, {"w": "coast", "h": "海岸"}, {"w": "central", "h": "中心的"}, {"w": "autumn", "h": "秋天"}, {"w": "thunderstorm", "h": "雷暴"}, {"w": "stand", "h": "站立"}, {"w": "invitations", "h": "邀请"}], "ch": 8}, {"title": "The Music of Salvatore Sciarrino", "words": [{"w": "essays", "h": "文章"}, {"w": "originality", "h": "独创性"}, {"w": "silence", "h": "沉默"}, {"w": "nature", "h": "自然"}, {"w": "pioneer", "h": "先驱"}, {"w": "volcano", "h": "火山"}, {"w": "friend", "h": "朋友"}, {"w": "thunder", "h": "雷"}, {"w": "metal", "h": "金属"}, {"w": "structure", "h": "结构"}], "ch": 4}, {"title": "bird surveying techniques", "words": [{"w": "protect", "h": "保护"}, {"w": "estimate", "h": "估计"}, {"w": "mapping", "h": "绘图"}, {"w": "trends", "h": "趋势"}, {"w": "pollution", "h": "污染"}, {"w": "survival", "h": "生存"}, {"w": "wind", "h": "风"}, {"w": "frequency", "h": "频率"}, {"w": "recordings", "h": "录音"}, {"w": "distance", "h": "距离"}], "ch": 2}, {"title": "house cleaning service form", "words": [{"w": "southeast", "h": "东南"}, {"w": "double rooms", "h": "双人房"}, {"w": "an office", "h": "办公室"}, {"w": "lounge", "h": "等候室"}, {"w": "thursday", "h": "星期四"}], "ch": 7}, {"title": "补充词汇(第12列-4)", "words": [{"w": "transport", "h": "运输"}, {"w": "presents", "h": "礼物"}, {"w": "dressler", "h": "德雷斯勒"}, {"w": "garage", "h": "车库"}, {"w": "celebration", "h": "庆祝"}, {"w": "vegetarian", "h": "素食者"}, {"w": "strawberries", "h": "草莓"}, {"w": "cheese", "h": "奶酪"}, {"w": "disco", "h": "迪斯科"}, {"w": "flowers", "h": "花"}], "ch": 8}, {"title": "the Antikythera mechanism", "words": [{"w": "cargo", "h": "货物"}, {"w": "rock", "h": "岩石"}, {"w": "inscriptions", "h": "铭文"}, {"w": "cracks", "h": "裂缝"}, {"w": "metal", "h": "金属"}, {"w": "wood", "h": "木头"}, {"w": "handle", "h": "把手"}, {"w": "eclipse", "h": "日食"}, {"w": "calendar", "h": "日历"}, {"w": "clocks", "h": "时钟"}], "ch": 3}, {"title": "british textile industry", "words": [{"w": "million", "h": "百万"}, {"w": "manufacturing", "h": "制造业"}, {"w": "women", "h": "女性"}, {"w": "outdoor", "h": "户外的"}], "ch": 3}, {"title": "eco-farm", "words": [{"w": "pennington", "h": "彭宁顿"}, {"w": "greenfield", "h": "格林菲尔德"}, {"w": "lake", "h": "湖"}, {"w": "radio", "h": "收音机"}, {"w": "flat", "h": "公寓"}, {"w": "forest", "h": "森林"}, {"w": "organic", "h": "有机的"}, {"w": "bike", "h": "自行车"}, {"w": "dance", "h": "跳舞"}], "ch": 6}, {"title": "补充词汇(第13列-4)", "words": [{"w": "congratulations", "h": "祝贺"}, {"w": "taxi", "h": "出租车"}, {"w": "pool", "h": "游泳池"}, {"w": "lemon", "h": "柠檬"}, {"w": "couple", "h": "夫妇"}, {"w": "smoking", "h": "吸烟"}, {"w": "police", "h": "警察"}, {"w": "gray", "h": "灰色"}, {"w": "microwave", "h": "微波炉"}, {"w": "reception", "h": "接待处"}], "ch": 8}, {"title": "soundscapes", "words": [{"w": "composer", "h": "作曲家"}, {"w": "meaning", "h": "意义"}, {"w": "frogs", "h": "青蛙"}, {"w": "rain", "h": "雨"}, {"w": "signature", "h": "签名"}, {"w": "loudness", "h": "响度"}, {"w": "climate", "h": "气候"}, {"w": "pollution", "h": "污染"}, {"w": "maps", "h": "地图"}, {"w": "shrimp", "h": "虾"}], "ch": 4}, {"title": "boar and red deer", "words": [{"w": "protected", "h": "受保护的"}, {"w": "environment", "h": "环境"}, {"w": "diseases", "h": "疾病"}, {"w": "poison", "h": "毒药"}, {"w": "forest", "h": "森林"}, {"w": "captivity", "h": "圈养"}, {"w": "potatoes", "h": "土豆"}, {"w": "food", "h": "食物"}, {"w": "hunting", "h": "打猎"}, {"w": "crops", "h": "农作物"}], "ch": 2}, {"title": "courses offered by a community college", "words": [{"w": "notebook", "h": "笔记本"}, {"w": "certificate", "h": "证书"}, {"w": "apron", "h": "围裙"}, {"w": "lawton", "h": "劳顿"}, {"w": "neck", "h": "脖子"}, {"w": "mat", "h": "垫子"}, {"w": "brushes", "h": "刷子"}], "ch": 7}, {"title": "补充词汇(第14列-4)", "words": [{"w": "shower", "h": "淋浴"}, {"w": "lake", "h": "湖"}, {"w": "fishing", "h": "钓鱼"}, {"w": "farm", "h": "农场"}, {"w": "forest", "h": "森林"}, {"w": "oil", "h": "油"}, {"w": "mud", "h": "泥"}, {"w": "back", "h": "背部"}, {"w": "warm", "h": "温暖的"}, {"w": "minutes", "h": "分钟"}], "ch": 8}, {"title": "Nanotechnology and Applications", "words": [{"w": "microscope", "h": "显微镜"}, {"w": "unnatural", "h": "不自然的"}, {"w": "iron", "h": "铁"}, {"w": "chocolate", "h": "巧克力"}, {"w": "flavour", "h": "味道"}, {"w": "fertilizers", "h": "肥料"}, {"w": "drugs", "h": "药物"}, {"w": "silver", "h": "银"}, {"w": "weight", "h": "重量"}, {"w": "sun", "h": "太阳"}], "ch": 3}, {"title": "ancient cave art symbols", "words": [{"w": "triangle", "h": "三角形"}, {"w": "horse", "h": "马"}, {"w": "fat", "h": "脂肪"}, {"w": "straw", "h": "稻草"}, {"w": "noise", "h": "噪音"}, {"w": "necklace", "h": "项链"}, {"w": "boat", "h": "船"}, {"w": "code", "h": "代码"}, {"w": "arrows", "h": "箭头"}, {"w": "wood", "h": "木头"}], "ch": 0}, {"title": "horseback trip", "words": [{"w": "birds", "h": "鸟"}, {"w": "tent", "h": "帐篷"}, {"w": "mountains", "h": "山脉"}, {"w": "swim", "h": "游泳"}, {"w": "waterfall", "h": "瀑布"}, {"w": "cave", "h": "洞穴"}, {"w": "back", "h": "背部"}, {"w": "walking boots", "h": "登山靴"}, {"w": "discount", "h": "折扣"}, {"w": "insurance", "h": "保险"}], "ch": 7}, {"title": "leatherback turtles", "words": [{"w": "shape", "h": "形状"}, {"w": "dives", "h": "潜水"}, {"w": "soft", "h": "柔软的"}, {"w": "sleep", "h": "睡眠"}, {"w": "protein", "h": "蛋白质"}, {"w": "migration", "h": "迁徙"}, {"w": "surface", "h": "表面"}, {"w": "power", "h": "力量"}, {"w": "depth", "h": "深度"}, {"w": "energy", "h": "能量"}], "ch": 2}, {"title": "african clawed frog", "words": [{"w": "smooth", "h": "光滑的"}, {"w": "protection", "h": "保护"}, {"w": "half", "h": "一半"}, {"w": "still", "h": "静止的"}, {"w": "salt", "h": "盐"}, {"w": "mud", "h": "泥"}, {"w": "smell", "h": "气味"}, {"w": "pump", "h": "泵"}, {"w": "pest", "h": "害虫"}, {"w": "antibiotic", "h": "抗生素"}], "ch": 2}, {"title": "getting a job with an airline", "words": [{"w": "money", "h": "钱"}, {"w": "168", "h": "168"}, {"w": "maths", "h": "数学"}, {"w": "language", "h": "语言"}, {"w": "swim", "h": "游泳"}, {"w": "illness", "h": "疾病"}, {"w": "culture", "h": "文化"}, {"w": "team", "h": "团队"}, {"w": "uniform", "h": "制服"}], "ch": 7}, {"title": "Kakapo,the endangered bird", "words": [{"w": "skin", "h": "皮肤"}, {"w": "eagle", "h": "鹰"}, {"w": "museums", "h": "博物馆"}, {"w": "dogs", "h": "狗"}, {"w": "portable", "h": "轻便的"}, {"w": "forests", "h": "森林"}, {"w": "leg", "h": "腿"}, {"w": "rats", "h": "老鼠"}, {"w": "helicopter", "h": "直升机"}, {"w": "virus", "h": "病毒"}], "ch": 2}, {"title": "a survey on improving hospitals", "words": [{"w": "transportation", "h": "运输"}, {"w": "clean", "h": "干净的"}, {"w": "information", "h": "信息"}, {"w": "residents", "h": "居民"}, {"w": "bonus", "h": "奖金"}, {"w": "visitors", "h": "游客"}, {"w": "communication", "h": "交流"}, {"w": "sleep", "h": "睡眠"}, {"w": "plastic", "h": "塑料"}, {"w": "planning", "h": "规划"}], "ch": 5}, {"title": "camp counsellor", "words": [{"w": "leader", "h": "领导者"}, {"w": "tennis", "h": "网球"}, {"w": "eight", "h": "八"}, {"w": "june", "h": "六月"}, {"w": "training", "h": "训练"}, {"w": "insurance", "h": "保险"}, {"w": "discounts", "h": "折扣"}, {"w": "eighteen", "h": "十八"}, {"w": "police", "h": "警察"}, {"w": "985", "h": "985"}], "ch": 7}, {"title": "intelligence investigation", "words": [{"w": "life", "h": "生活"}, {"w": "feature", "h": "特征"}, {"w": "twins", "h": "双胞胎"}, {"w": "experiences", "h": "经历"}, {"w": "improvement", "h": "改善"}, {"w": "musical", "h": "音乐的"}, {"w": "brain", "h": "大脑"}, {"w": "face", "h": "脸"}, {"w": "spelling", "h": "拼写"}, {"w": "song", "h": "歌曲"}], "ch": 5}, {"title": "children humor", "words": [{"w": "jokes", "h": "笑话"}, {"w": "groups", "h": "团体"}, {"w": "parents", "h": "父母"}, {"w": "action", "h": "行动"}, {"w": "adults", "h": "成年人"}, {"w": "creative", "h": "创造性的"}, {"w": "gender", "h": "性别"}, {"w": "change", "h": "改变"}, {"w": "pictures", "h": "图片"}, {"w": "danger", "h": "危险"}], "ch": 5}, {"title": "补充词汇(第18列-3)", "words": [{"w": "ticket", "h": "票"}, {"w": "sunscreen", "h": "防晒霜"}, {"w": "headaches", "h": "头痛"}, {"w": "nurse", "h": "护士"}, {"w": "concert", "h": "音乐会"}, {"w": "manager", "h": "经理"}, {"w": "automatic", "h": "自动的"}, {"w": "tires", "h": "轮胎"}, {"w": "station", "h": "车站"}, {"w": "supermarket", "h": "超市"}], "ch": 8}, {"title": "insects as a food source", "words": [{"w": "vitamins", "h": "维生素"}, {"w": "river", "h": "河流"}, {"w": "space", "h": "空间"}, {"w": "antibiotic", "h": "抗生素"}, {"w": "bacteria", "h": "细菌"}, {"w": "cities", "h": "城市"}, {"w": "taste", "h": "味道"}, {"w": "disease", "h": "疾病"}, {"w": "cleaning", "h": "清洁"}, {"w": "marketing", "h": "营销"}], "ch": 6}, {"title": "autonomous underwater vehicle", "words": [{"w": "aeroplane", "h": "飞机"}, {"w": "robot", "h": "机器人"}, {"w": "salt", "h": "盐"}, {"w": "quality", "h": "质量"}, {"w": "climate", "h": "气候"}, {"w": "cables", "h": "电缆"}, {"w": "chemical", "h": "化学物质"}, {"w": "oil", "h": "油"}, {"w": "surface", "h": "表面"}, {"w": "right", "h": "正确的"}], "ch": 3}, {"title": "补充词汇(第19列-3)", "words": [{"w": "identification", "h": "识别"}, {"w": "1.19", "h": "1.19"}, {"w": "40 minutes", "h": "40分钟"}, {"w": "balcony", "h": "阳台"}, {"w": "tennis courts", "h": "网球场"}, {"w": "fish dishes", "h": "鱼类菜肴"}, {"w": "piano", "h": "钢琴"}, {"w": "garden", "h": "花园"}, {"w": "helicopter", "h": "直升机"}, {"w": "fireworks", "h": "烟花"}], "ch": 8}, {"title": "ingmar bergman-film director", "words": [{"w": "depth", "h": "深度"}, {"w": "actors", "h": "演员"}, {"w": "light", "h": "光"}, {"w": "emotion", "h": "情感"}, {"w": "purpose", "h": "目的"}, {"w": "words", "h": "词语"}, {"w": "myth", "h": "神话"}, {"w": "dreams", "h": "梦想"}, {"w": "family", "h": "家庭"}, {"w": "accept", "h": "接受"}], "ch": 4}, {"title": "architecture in new zealand in 1960", "words": [{"w": "roof", "h": "屋顶"}, {"w": "wood", "h": "木头"}, {"w": "square", "h": "广场"}, {"w": "concrete", "h": "混凝土"}, {"w": "cost", "h": "成本"}, {"w": "stone", "h": "石头"}, {"w": "garage", "h": "车库"}, {"w": "layout", "h": "布局"}, {"w": "towers", "h": "塔"}, {"w": "shadow", "h": "阴影"}], "ch": 4}, {"title": "补充词汇(第20列-3)", "words": [{"w": "cable car", "h": "缆车"}, {"w": "rack", "h": "架子"}, {"w": "two pockets", "h": "两个口袋"}, {"w": "leather", "h": "皮革"}, {"w": "notebook", "h": "笔记本"}, {"w": "445", "h": "445"}, {"w": "GW432HA", "h": "GW432HA"}, {"w": "photo", "h": "照片"}, {"w": "round", "h": "圆的"}, {"w": "decorations", "h": "装饰"}], "ch": 8}, {"title": "human memory", "words": [{"w": "write", "h": "写"}, {"w": "plants", "h": "植物"}, {"w": "place", "h": "地方"}, {"w": "sight", "h": "视力"}, {"w": "speech", "h": "演讲"}, {"w": "natural", "h": "自然的"}, {"w": "religion", "h": "宗教"}, {"w": "science", "h": "科学"}, {"w": "data", "h": "数据"}, {"w": "journalist", "h": "记者"}], "ch": 5}, {"title": "sea urchins", "words": [{"w": "plants", "h": "植物"}, {"w": "spines", "h": "脊柱"}, {"w": "pest", "h": "害虫"}, {"w": "Asia/Japan", "h": "亚洲/日本"}, {"w": "decline", "h": "下降"}, {"w": "aging", "h": "老龄化"}, {"w": "200 years", "h": "200年"}, {"w": "0.1 centimeters per", "h": "0.1厘米每"}, {"w": "bread", "h": "面包"}, {"w": "ocean conditions", "h": "海洋状况"}], "ch": 2}, {"title": "补充词汇(第21列-3)", "words": [{"w": "menu", "h": "菜单"}, {"w": "sandwiches", "h": "三明治"}, {"w": "izard", "h": "羚羊"}, {"w": "switched off", "h": "关闭"}, {"w": "wood", "h": "木头"}, {"w": "client engineer", "h": "客户工程师"}, {"w": "post office", "h": "邮局"}, {"w": "knee", "h": "膝盖"}, {"w": "go upstairs", "h": "上楼"}, {"w": "stick", "h": "棍子"}], "ch": 8}]};
+const AUDIO_MAP = {"0.1 centimeters per": "7a2078968753.mp3", "1.19": "596c6989f748.mp3", "16": "c74d97b01eae.mp3", "168": "006f52e9102a.mp3", "200 years": "e25db97fa455.mp3", "25": "8e296a067a37.mp3", "40 minutes": "d73f767070ff.mp3", "445": "67f7fb873eaf.mp3", "985": "54a367d62915.mp3", "asia/japan": "ce7d8bab56e4.mp3", "gw432ha": "17ce1c7aef30.mp3", "germany": "28ef36b35ae8.mp3", "accent": "727b79a9a430.mp3", "accept": "4abe77c201ff.mp3", "action": "418c5509e217.mp3", "actors": "67ef4f4b0745.mp3", "adults": "0e18c75349f3.mp3", "advanced": "37c3450b6618.mp3", "adventure": "7cb4872d4140.mp3", "advertise": "91b7834deae7.mp3", "advertisements": "929834fd6433.mp3", "advertising": "e5b0ffb16057.mp3", "aeroplane": "2ff2d114f3ff.mp3", "afternoon": "75631f399043.mp3", "aging": "ecca8c5061f9.mp3", "an office": "e49add6cc285.mp3", "animals": "a723e3dfb497.mp3", "antibiotic": "d781f18930a8.mp3", "apron": "c700b3040518.mp3", "arrows": "ea2d5ea28af3.mp3", "audiences": "b55f12ff078e.mp3", "august": "61a590f1b9b5.mp3", "automatic": "2bd9c0ed0011.mp3", "autumn": "3a4b5f2f801a.mp3", "aware": "d5fd3f92cf27.mp3", "back": "469bba0a5642.mp3", "bacteria": "c49441ae4992.mp3", "balcony": "d85f7317e97e.mp3", "balls": "417e4705aee1.mp3", "ban": "4317652e7e08.mp3", "banks": "f3301f2aa6c5.mp3", "basement": "48719d321e4b.mp3", "beach": "7193529abbf9.mp3", "belt": "960dc476150d.mp3", "bicycle": "9e8e37aeb444.mp3", "bike": "dde2c7ad63ad.mp3", "bird watching": "f9d0050b1fe4.mp3", "birds": "75c73f175a85.mp3", "boat": "dd8fc45d87f9.mp3", "boats": "59d4a4a5e54f.mp3", "bones": "775f172869d4.mp3", "bonus": "78056ebb02cf.mp3", "books": "7d8949bcbf85.mp3", "boots": "680561bec052.mp3", "brain": "8b373710bcf8.mp3", "bread": "dba7b12a19fe.mp3", "breathing": "906c3f651cbb.mp3", "bridge": "98ac6b4b086b.mp3", "brushes": "d9d7d593e742.mp3", "buildings": "a1b0311bca82.mp3", "bus station": "5d0a8e506cad.mp3", "cabin": "92faafe2b7a0.mp3", "cable car": "df338af7750d.mp3", "cables": "993a561654de.mp3", "cakes": "848e462678fe.mp3", "calendar": "a0e7b2a56511.mp3", "camel": "a4995d016a80.mp3", "captivity": "21472b0e6452.mp3", "car": "e6d96502596d.mp3", "caravan": "f669e395e156.mp3", "cargo": "f91cd5d61e1e.mp3", "carpet": "37c6ab2fd1e8.mp3", "cash": "93585797569d.mp3", "cave": "e386df9ee22e.mp3", "celebration": "aa716414de9f.mp3", "central": "a42a6c7fb856.mp3", "centuries": "8d88fed234e6.mp3", "certificate": "e0d30cef5c61.mp3", "change": "eb399bcaca68.mp3", "cheese": "fea0f1f6fede.mp3", "chemical": "56d1917e55ac.mp3", "chemist": "69982f39092b.mp3", "child seat": "1db26fe2f4b7.mp3", "chocolate": "c378985d629e.mp3", "cinema": "4870f9d3a629.mp3", "cities": "a66b311547bf.mp3", "classic": "f3d64714d1f6.mp3", "classical": "700e61469b84.mp3", "clean": "123402c04dcf.mp3", "cleaning": "4c85b3625c95.mp3", "client engineer": "42bf8c618bbb.mp3", "clifton": "aa085982a647.mp3", "climate": "0b8535446699.mp3", "clocks": "f73f2954c999.mp3", "clothing": "50cf19912960.mp3", "club": "95cc6b4ac5ab.mp3", "coast": "756d153ba898.mp3", "coastlines": "5410df54464f.mp3", "coconut": "763b8741d9f1.mp3", "code": "c13367945d5d.mp3", "coin": "96a9519b8fdd.mp3", "coins": "68849520e7cb.mp3", "comedy": "12f0a8c7b1f4.mp3", "commercial": "df2375cd0f75.mp3", "communication": "979b93285de8.mp3", "competition": "3190dbf13bea.mp3", "composer": "180b81a58ca6.mp3", "concert": "0909553c7a64.mp3", "concrete": "00ecf6d06f00.mp3", "congratulations": "fb8d98be1265.mp3", "cooking": "739b1f3a9bd2.mp3", "cooperation": "21bd0eb929c7.mp3", "cost": "4e1566f0798f.mp3", "costumes": "f0fa9e58caec.mp3", "cotton": "a452dd6aa392.mp3", "couple": "741f4475f894.mp3", "cracks": "2d6aa9e26592.mp3", "creative": "828e096fef42.mp3", "critics": "beed47330706.mp3", "crops": "055735916875.mp3", "culture": "3f7039a836c0.mp3", "current": "43b5c9175984.mp3", "damage": "da14a7168b54.mp3", "dance": "3355d92c04a3.mp3", "danger": "b136ee6c797c.mp3", "data": "8d777f385d3d.mp3", "decline": "2b122770316e.mp3", "decorations": "11a2251e6d9f.mp3", "democratic": "8df87703c4bf.mp3", "density": "35f367534300.mp3", "deposit": "ff2508c79c66.mp3", "depth": "12a055bf01a3.mp3", "desks": "5b95846bde97.mp3", "different": "29e4b66fa807.mp3", "dinner": "ad5acdfacefd.mp3", "direct": "7caa701b2bd5.mp3", "director": "3d4e992d8d8a.mp3", "disco": "d78acd9cad41.mp3", "discount": "e2dc6c48c56d.mp3", "discounts": "9544fa2fae51.mp3", "disease": "9e19f8857441.mp3", "diseases": "5c749da59147.mp3", "dishwasher": "a1515828e3ab.mp3", "display": "ebf78b512222.mp3", "distance": "a74ec9c5b688.mp3", "dives": "6c062d45e4c6.mp3", "diving": "a600a03d266f.mp3", "divorce": "ea768d7c881d.mp3", "doctor": "f9f16d97c90d.mp3", "dogs": "d28d2d3560fa.mp3", "donkey": "9443b0fceb8c.mp3", "double rooms": "1326426bb180.mp3", "dreams": "0d78658b259e.mp3", "dressler": "b8c2c9102827.mp3", "dried": "5d9c8ddf82df.mp3", "drive": "4aa1e7414849.mp3", "driver's license": "52495652ef91.mp3", "drugs": "8266cbec2295.mp3", "eagle": "b09315ea09c6.mp3", "eclipse": "6b7b655dd22f.mp3", "economy": "0959a8b663be.mp3", "eight": "24d27c169c2c.mp3", "eighteen": "2cbdaf9ce47a.mp3", "elastic": "e16ddaf4f91d.mp3", "electronics": "9ca91fd2ee5f.mp3", "emotion": "7b5c057fdbcc.mp3", "employee first": "f2e67402cbca.mp3", "energy": "05e7d19a6d00.mp3", "engineers": "08ad83148266.mp3", "enjoyment": "7dfc1f5dc725.mp3", "enlargement": "a331078782bb.mp3", "environment": "e900e40bc91d.mp3", "equal": "465289687a70.mp3", "essays": "0c58b1a75d3b.mp3", "estimate": "94e7e2105434.mp3", "events": "16908b0605f2.mp3", "exercises": "ef8a960a23f6.mp3", "expectations": "b9ce034e1710.mp3", "expensive": "f384d48efac7.mp3", "experiences": "71df210ad5e2.mp3", "face": "d5ca322453f2.mp3", "factories": "0f695c4270a7.mp3", "factory": "9549dd6065d0.mp3", "family": "0d3fda0bdbb9.mp3", "farm": "e67ed91b512d.mp3", "farmers": "18fa3b09cc4b.mp3", "fat": "0d8dc086e16e.mp3", "fear": "eb88d7636980.mp3", "feature": "518a4861e5be.mp3", "february": "8eb8e307a6d6.mp3", "feedback": "3965207478e6.mp3", "feminism": "44a20d8673cf.mp3", "fertilizer": "a73f74e20a51.mp3", "fertilizers": "ca2e0acf3a88.mp3", "fight": "9e6417ebffec.mp3", "film": "bdbd6db1d8cc.mp3", "firewood": "63c596dc2aa0.mp3", "fireworks": "ee75a2f41a4b.mp3", "fish dishes": "236663d0c5b1.mp3", "fishing": "819a07afa4ab.mp3", "flat": "37fc7edee25a.mp3", "flavour": "98d480d744f1.mp3", "flood": "b61705f85f6a.mp3", "flooding": "3d6908208a02.mp3", "flour": "61f2982918cf.mp3", "flower": "608f0b988db4.mp3", "flowers": "7d37c580f9c3.mp3", "food": "62506be34d57.mp3", "foot": "d8735f7489c9.mp3", "forest": "f379cfd7a55b.mp3", "forests": "e45ba059a62f.mp3", "fork": "b2fcb4ba898f.mp3", "fossils": "d5d4f38112df.mp3", "france": "e165d4f2174b.mp3", "freedom": "d5aa1729c8c2.mp3", "frequency": "fad6c43b6288.mp3", "fresh": "76010858c836.mp3", "friend": "3af00c6cad11.mp3", "friendly": "be68582f77ae.mp3", "frogs": "bf9990695b6c.mp3", "furniture": "fd87f5969eca.mp3", "garage": "3824795e4e1f.mp3", "garbage": "c8e8df895c2c.mp3", "garden": "e2704f30f596.mp3", "gases": "5f3e5790a6ff.mp3", "gender": "cc90f1913b83.mp3", "general": "958153f1b8b9.mp3", "genetic": "db721c8582c9.mp3", "gifts": "b4e6d54e3330.mp3", "glass": "2570c919f5ef.mp3", "gloves": "86ff54c0481d.mp3", "glue": "1ed4de8986cf.mp3", "go upstairs": "a09a94d82e03.mp3", "gold": "e07e81c20cf5.mp3", "golf": "c6cf642b8f1c.mp3", "government": "30618461f5ff.mp3", "grain": "c77306325720.mp3", "grass": "09d440e487d4.mp3", "gray": "cda7a650c585.mp3", "green ride": "40215e3b6653.mp3", "greenfield": "74ca11c4b9f6.mp3", "groups": "1471e4e05a4d.mp3", "guide": "a0c391dc49c4.mp3", "gun": "5161ebb0cce4.mp3", "gym": "e4d81f13f96f.mp3", "half": "7afe399f1415.mp3", "handle": "e1260894f59e.mp3", "hands": "6c8d61508321.mp3", "hard": "d64a84456adc.mp3", "harvest": "430e39cf0eec.mp3", "hat": "46b5e59b2fd3.mp3", "head": "96e89a298e0a.mp3", "headaches": "536a9eec5893.mp3", "health": "555bf8344ca0.mp3", "healthy": "741839f346d6.mp3", "heated": "590655ab1dc9.mp3", "helicopter": "e29e13ac702a.mp3", "helmet": "17b9183a08e7.mp3", "helmets": "178c1a0e3ceb.mp3", "higher": "fa2ec87a2e67.mp3", "history": "3cd15f8f2940.mp3", "holiday": "79d8e340812f.mp3", "horizontal": "4505cad08731.mp3", "horn": "50d48c9002eb.mp3", "horse": "f1bdf5ed1d7a.mp3", "hospital": "8b42a1c9b8f9.mp3", "hot chocolate": "16a93c79da09.mp3", "hotels": "4049cf76aecd.mp3", "hothouse": "489a31042eb1.mp3", "hours": "73cdddd7730a.mp3", "hunting": "fb5989176828.mp3", "ice": "7bdff76536f1.mp3", "ice exercise": "4447c696bc42.mp3", "identification": "1ca739d412d9.mp3", "illness": "2f8312688b39.mp3", "immigration": "13ad9c979f10.mp3", "improvement": "421f70d8b04a.mp3", "income": "34ae67734109.mp3", "industries": "5b4da8864718.mp3", "information": "bb3ccd5881d6.mp3", "inscriptions": "b8d4b5ef527b.mp3", "insects": "c7e27845057f.mp3", "instinctive": "debe966ec587.mp3", "instructions": "cbde2df6a7c8.mp3", "instructor": "175cca0310b9.mp3", "insurance": "b4628fe4f5f3.mp3", "interaction": "579fe8571f2e.mp3", "intermediate": "438fa616dea4.mp3", "internal website": "e9727431938f.mp3", "internet": "c3581516868f.mp3", "invitations": "2b830f876c0b.mp3", "iron": "bcd31c714bca.mp3", "izard": "24993f376c61.mp3", "january": "467b6140fe3b.mp3", "jeans": "a0f2589b1ced.mp3", "jobs": "27a06a9e3d5e.mp3", "jokes": "58110c37b29a.mp3", "journalist": "82ad21b5762c.mp3", "june": "11501255f177.mp3", "jungle": "5d991220a07e.mp3", "keyboard": "388a56dbb62a.mp3", "kindness": "e9d6bfefbe0f.mp3", "kitchen": "09228dac1556.mp3", "knee": "22b84b6e35ac.mp3", "knowledge": "a542e9b744be.mp3", "laboratory": "799ad83c247e.mp3", "lake": "97d986e2afa2.mp3", "lamb": "236eb95c2806.mp3", "land": "87cf962b3514.mp3", "lanes": "36373506bd49.mp3", "language": "8512ae7d57b1.mp3", "laundry": "fd330c14f753.mp3", "lawton": "2e455536a862.mp3", "layers": "aa292f2aa620.mp3", "layout": "c61404957758.mp3", "leader": "c444858e0aae.mp3", "leaflet": "1f6f5327375d.mp3", "leak": "89a489d281af.mp3", "leather": "73bbd566536e.mp3", "leg": "4e1df3d25669.mp3", "lemon": "3f24e567591e.mp3", "life": "e155e1bb4a9c.mp3", "lifestyle": "81de00460951.mp3", "light": "2ac43aa43bf4.mp3", "lines": "980da98409d0.mp3", "locker": "4e6ada6f19cc.mp3", "loudness": "2eafb001dd8e.mp3", "lounge": "c904c1be4912.mp3", "machine": "14754f13e528.mp3", "machinery": "cc68ce7f5eb2.mp3", "male": "07cf4f8f5d8b.mp3", "manager": "1d0258c2440a.mp3", "mangoes": "ce80df3018d7.mp3", "manufacturing": "8d31d9aa2193.mp3", "map": "1d78dc8ed512.mp3", "mapping": "f84f4a69bdc0.mp3", "maps": "7e94476d6255.mp3", "market": "c1c16452b046.mp3", "marketing": "c769c2bd1550.mp3", "marriage": "772b76917b47.mp3", "mat": "4a258d930b7d.mp3", "math": "7e676e9e663b.mp3", "maths": "d939e7a6b17e.mp3", "meaning": "f2f990f68492.mp3", "meat": "07202a7e6cbf.mp3", "medicine": "d9e5d212320e.mp3", "menu": "8d6ab84ca2af.mp3", "metal": "86094b61cb9f.mp3", "microscope": "1b0e567e81ab.mp3", "microwave": "6cfaeb6caa8c.mp3", "middle class": "011907d6c577.mp3", "midnight": "1506aeeb8c3a.mp3", "migration": "b439f9bbe0a4.mp3", "milk": "ecbdb882ae86.mp3", "million": "bafd00e88d3b.mp3", "minutes": "640fd0cc0ffa.mp3", "modern": "ae74ea4e2e86.mp3", "money": "9726255eec08.mp3", "month": "7436f942d5ea.mp3", "mother": "6ee6a213cb02.mp3", "mould": "848cd27cd1aa.mp3", "mountains": "7c44362cb840.mp3", "mud": "c95e3dd9ec92.mp3", "museum": "eb0ea0bc6c91.mp3", "museums": "1d4719fb5e23.mp3", "musical": "7bf4a177e867.mp3", "myth": "9b87b1ff71e8.mp3", "natural": "8f4ef05b543f.mp3", "nature": "405aaff66082.mp3", "navigate": "d3427c30c47e.mp3", "navigational": "8e204e51a4d9.mp3", "neck": "45fe7e5529d2.mp3", "necklace": "bb7409e82cb0.mp3", "nets": "df8abcdaa5f3.mp3", "newspaper": "69da234ae73a.mp3", "newspapers": "3ad04d7f64c2.mp3", "nitrogen": "63ebb9250f49.mp3", "noise": "aaddc3454ccb.mp3", "notebook": "fb5d1b4a2312.mp3", "nurse": "0701aa317da5.mp3", "objects": "5891da2d6497.mp3", "obligation": "77ed653eb725.mp3", "observation": "e09491aee3bd.mp3", "ocean conditions": "c65b7fecaec6.mp3", "octopuses": "d5a93f5ab1e0.mp3", "oil": "c5af0543407a.mp3", "oldest": "f14b514e6ca0.mp3", "open": "7cef8a734855.mp3", "opera": "9ed987966c06.mp3", "orange": "fe01d67a002d.mp3", "organic": "92247aa9766c.mp3", "originality": "84eaacae3b4d.mp3", "outdoor": "2f94a90ca788.mp3", "packaging": "869b299375ba.mp3", "painkillers": "1a67b54ddb73.mp3", "paint": "c1940aeeb969.mp3", "painting": "6a7c1b1d588c.mp3", "palace": "667940ea3df6.mp3", "parents": "c68ad910ed49.mp3", "parking": "3ac156eead4a.mp3", "participation": "f9cb12f89c3f.mp3", "pennington": "71bf8c090757.mp3", "pens": "500adcdc4d00.mp3", "people": "12a032ce9179.mp3", "perfume": "96ddd4009593.mp3", "pest": "fc3a4fb32770.mp3", "photo": "5ae0c1c8a526.mp3", "photographs": "159dbc1c76cc.mp3", "photography": "1b2072547afb.mp3", "piano": "d113f1c3f9ed.mp3", "pictures": "9ed98e5c3e96.mp3", "pioneer": "b39ecd658b2b.mp3", "pizza": "7cf2db5ec261.mp3", "place": "ebed715e82a0.mp3", "planning": "98ded198ba3a.mp3", "plants": "b946a84bf889.mp3", "plastic": "3f01a108d7ed.mp3", "plate": "5da21a3ecff2.mp3", "poems": "e3a70eb6b698.mp3", "poison": "35393c24384b.mp3", "police": "814989b983fd.mp3", "polluted": "811ae2552998.mp3", "pollution": "d37a8f385b5b.mp3", "pool": "b10a8c0bede9.mp3", "portable": "1a8056c59b33.mp3", "post office": "6c3373345202.mp3", "potatoes": "e1a1f0be30ce.mp3", "poverty": "d8eae8212e2e.mp3", "power": "62cd275989e7.mp3", "presents": "9d5d9a10d8cf.mp3", "privacy": "21cec257feb1.mp3", "process": "5075140835d0.mp3", "promotion": "f8dcad058c9c.mp3", "protect": "124c16e5bae3.mp3", "protected": "2d07fad78478.mp3", "protection": "152f5dc0f7ac.mp3", "protein": "6e6941c17eab.mp3", "public": "4c9184f37cff.mp3", "pump": "cf82720db122.mp3", "purpose": "4d066bbb0e40.mp3", "quality": "d66636b253cb.mp3", "rabbit": "a51e47f64637.mp3", "rack": "11690b09f160.mp3", "radio": "a398fb77df76.mp3", "railway": "0edf49df2720.mp3", "rain": "23678db5efde.mp3", "raining": "6bbedc46fea8.mp3", "rats": "b963deb57bb3.mp3", "realistic": "299615965134.mp3", "reception": "1da95b279fc0.mp3", "recordings": "22f9946cd059.mp3", "recreational": "91c53aea5931.mp3", "recycling": "24b2cf6bc862.mp3", "reduction": "9477e24c78f1.mp3", "regional manager": "f367b16f4fcc.mp3", "rehearsal": "9b97ef3f4ed2.mp3", "relationship": "3ac08b268442.mp3", "religion": "f16cc584cec5.mp3", "repair": "9ab776b93b3c.mp3", "repair kit": "d67581586f64.mp3", "report": "e98d2f001da5.mp3", "research": "7412df2b1db8.mp3", "residents": "430773153341.mp3", "resources": "55b558c7ef82.mp3", "reward": "f9b11ed03ce2.mp3", "right": "7c4f29407893.mp3", "river": "a5b03048ebe3.mp3", "robot": "87b7cb79481f.mp3", "rock": "9a1f30943126.mp3", "roof": "3a393f7a37db.mp3", "rooftop": "6612bcd1b8b3.mp3", "root": "63a9f0ea7bb9.mp3", "rope": "379e86ff8a80.mp3", "round": "9bbd993d9da7.mp3", "rubbish": "d27681d3c50c.mp3", "safety": "381ff09422ad.mp3", "sail": "163ccb6353c3.mp3", "sailing": "ecb518928f86.mp3", "salt": "ceb20772e0c9.mp3", "sand": "88336b5bb2a1.mp3", "sandwiches": "54ccda6d29fe.mp3", "satellite": "53bb79002a8a.mp3", "science": "fb5c7f9bb4b3.mp3", "scientists": "0d40887127be.mp3", "screen": "599eba19aa93.mp3", "sculpture": "5aeef5db05c9.mp3", "seat": "554e4b55e8cc.mp3", "security": "e91e63481578.mp3", "sensitive": "7bdc8a923ea3.mp3", "shadow": "3bf1114a986b.mp3", "shallow": "e834955cdb19.mp3", "shape": "8c73a98a3009.mp3", "share": "85e47ac07ac9.mp3", "shell": "2591c98b7011.mp3", "shoes": "b0a8b6f82047.mp3", "shopping": "b2fe440cb7a0.mp3", "shopping malls": "81337e57a1b3.mp3", "shore": "7fdadeab17a8.mp3", "shower": "7168c799ca2c.mp3", "shrimp": "34842e464f25.mp3", "sight": "31dbbb2e6064.mp3", "signal": "521345a9fb57.mp3", "signature": "ac201fd270c3.mp3", "silence": "0e82533c37fc.mp3", "silk": "5339078d0c2b.mp3", "silver": "97f014516561.mp3", "singing": "cb75333af283.mp3", "sixteen": "bd2c775d9eaf.mp3", "skin": "37c24a3158dc.mp3", "skirt": "25035b696ada.mp3", "sleep": "c9fab33e9458.mp3", "smell": "d938ad5cbe68.mp3", "smile": "3ddaeb82fbba.mp3", "smoke": "fdfa02ecf86f.mp3", "smoking": "5cc224100427.mp3", "smooth": "a7887cc809cf.mp3", "snack": "287c683aedfe.mp3", "snowboarding": "65109486fd74.mp3", "social": "36fa3a193d73.mp3", "soft": "dc58a7971816.mp3", "solution": "550237b8fbcd.mp3", "song": "683eb609607a.mp3", "south": "50fd76e33fe5.mp3", "southeast": "fc3ae6a234c0.mp3", "space": "ff2364a0be3d.mp3", "speech": "9b4a8a31b4ca.mp3", "speed": "ce4ef3ec9844.mp3", "spelling": "fe8ec90a5524.mp3", "spices": "662c02ec6c42.mp3", "spines": "2e4ba52a0d6d.mp3", "sports": "088495f30901.mp3", "spring": "2a2d595e6ed9.mp3", "square": "2fc01ec765ec.mp3", "stand": "945b93f37cd9.mp3", "station": "e8ed3f284611.mp3", "status": "9acb44549b41.mp3", "steam": "75eec5a819fd.mp3", "steel": "3eb38fa8079f.mp3", "stick": "37f8bf33853e.mp3", "still": "df55340f75b5.mp3", "stone": "0a840ef45467.mp3", "storm": "849c829d658b.mp3", "straw": "1933600a817d.mp3", "strawberries": "5d34126d94f9.mp3", "stress": "e10a36f1a523.mp3", "structure": "07414f4e15ca.mp3", "studio": "c944634550c6.mp3", "sun": "ebd556e6dfc9.mp3", "sunlight": "6ee3d2bff78c.mp3", "sunscreen": "a8faf39e5f83.mp3", "supermarket": "46d7115f4014.mp3", "surface": "d302e976c9dd.mp3", "survival": "a9946b8d0c89.mp3", "swim": "539125fdf85b.mp3", "switched off": "67cbe6dcd085.mp3", "symbols": "5503577415fc.mp3", "tail": "7aea2552dfe7.mp3", "talk": "64b59718a47c.mp3", "taste": "cad1c068cb62.mp3", "tax": "06565e5611f2.mp3", "taxes": "a9bb50547acd.mp3", "taxi": "35e768d3043c.mp3", "team": "f894427cc1c5.mp3", "technology": "83ec45960b80.mp3", "teeth": "1e5c15180cbd.mp3", "tennis": "1fbfb23351e3.mp3", "tennis courts": "7466adb25392.mp3", "tent": "7b65dcf02027.mp3", "tents": "d93faf1b9c10.mp3", "testing": "ae2b1fca5159.mp3", "theater": "5827264e8de2.mp3", "thunder": "5c7686c0284e.mp3", "thunderstorm": "445a222489d5.mp3", "thursday": "c395246f710b.mp3", "ticket": "cdfee2bc43d6.mp3", "tires": "0f3d3fc913d9.mp3", "tools": "4a931512ce65.mp3", "tourism": "02a954aad29f.mp3", "towers": "35ddfe17e376.mp3", "town": "7198cda575b5.mp3", "toys": "efacc1763324.mp3", "traders": "3dfa0989f3ff.mp3", "tradition": "6819d54dd49f.mp3", "traditional": "9b732bf88531.mp3", "training": "c185ddac8b5a.mp3", "transparency": "2371574be5e7.mp3", "transport": "7b334b726036.mp3", "transportation": "4d70921065c0.mp3", "trash": "30639096bfe4.mp3", "trends": "9ce2472db8c3.mp3", "triangle": "cef44b46f16a.mp3", "trousers": "1a637268f7ae.mp3", "trucks": "e3d9f93cae02.mp3", "tuesday": "1a31a6f65cc9.mp3", "twenty five": "71507508361f.mp3", "twins": "9275efa86a9c.mp3", "two pockets": "b9baa6e183bd.mp3", "typing": "6a5df9fcac0c.mp3", "uncomfortable": "c19a5c3628d8.mp3", "underground": "959c83618ab3.mp3", "uniform": "a489ffed938e.mp3", "university": "10238d611489.mp3", "unnatural": "9a10ff49fc5b.mp3", "vacation": "ee8ded5830dd.mp3", "value": "2063c1608d6e.mp3", "variety": "a04c01d73a91.mp3", "vegetarian": "2b65cd61d1dd.mp3", "vertical": "e6dec152d6a9.mp3", "virus": "326577fbe6d7.mp3", "visitors": "f24d2cc05ca7.mp3", "vitamins": "ec54c60185e1.mp3", "volcano": "eeef20c962e0.mp3", "waitress": "9bc7a5c44411.mp3", "walk": "46f963157601.mp3", "walking": "099410f60183.mp3", "walking boots": "7287f9db47df.mp3", "warm": "a957a3153eb7.mp3", "water": "9460370bb0ca.mp3", "waterfall": "911b1ca4b34d.mp3", "waterproof": "691bf46157f3.mp3", "weapons": "b27a803ed346.mp3", "weather conditions": "2f316db491e2.mp3", "weeds": "95fdb165eb33.mp3", "week": "172a8327fcd3.mp3", "weight": "7edabf994b76.mp3", "whistle": "1c6819d0309c.mp3", "wild": "48fa4c380431.mp3", "wind": "7e25b972e192.mp3", "window": "05b8c74cbd96.mp3", "winter": "f6432274349b.mp3", "women": "8267a0e01e45.mp3", "wood": "22811dd94d65.mp3", "words": "89759e1284e2.mp3", "write": "efb2a684e4af.mp3", "written": "9cc26fa09ce3.mp3", "young": "f6182f0359f7.mp3", "zippers": "a57e6cfb1988.mp3", "zoom": "15913c103a52.mp3"};
+
+const CH = APP.chapters, TOPICS = APP.topics;
+
+/* ---------- mastery store (localStorage, Leitner 0-5) ---------- */
+const LSKEY='ielts_mastery_v2';
+let store={};
+try{store=JSON.parse(localStorage.getItem(LSKEY))||{};}catch(e){store={};}
+function save(){try{localStorage.setItem(LSKEY,JSON.stringify(store));}catch(e){}}
+function key(w){return w.toLowerCase().trim();}
+function rec(w){return store[key(w)]||{box:0,seen:0,correct:0,wrong:0,streak:0,last:0};}
+function grade(w,correct){
+  const r=rec(w);r.seen++;r.last=Date.now();
+  if(correct){r.correct++;r.streak++;r.box=Math.min(5,r.box+1);}
+  else{r.wrong++;r.streak=0;r.box=Math.max(0,r.box-1);if(r.box>1)r.box=1;}
+  store[key(w)]=r;save();
+}
+const MASTERED=b=>b>=4;      // box 4-5 = mastered
+const LEARNING=b=>b>=1&&b<4; // box 1-3 = learning
+/* progress for a set of words: returns {mastered,learning,newN,total,pct,accSeen,accCorrect} */
+function stats(words){
+  let m=0,l=0,n=0,seen=0,cor=0,boxSum=0;
+  words.forEach(w=>{const r=rec(w.w);if(MASTERED(r.box))m++;else if(LEARNING(r.box))l++;else n++;seen+=r.seen;cor+=r.correct;boxSum+=r.box;});
+  const total=words.length;
+  return {mastered:m,learning:l,newN:n,total,
+    pct:total?Math.round(boxSum/(5*total)*100):0,       // 连续"掌握度" = 平均盒子/5
+    mpct:total?Math.round(m/total*100):0,               // 完全掌握占比
+    lpct:total?Math.round(l/total*100):0,
+    seen,cor,acc:seen?Math.round(cor/seen*100):null};
+}
+/* 三色分段进度条：掌握(绿)/学习中(琥珀)/未学(灰) */
+function segBar(s){
+  return '<div class="segbar">'
+    +'<span style="width:'+s.mpct+'%;background:#22c55e"></span>'
+    +'<span style="width:'+s.lpct+'%;background:var(--amber)"></span></div>';
+}
+function allWords(){const a=[];TOPICS.forEach(t=>t.words.forEach(w=>a.push(w)));return a;}
+function chapterWords(ci){const a=[];TOPICS.forEach(t=>{if(t.ch===ci)t.words.forEach(w=>a.push(w));});return a;}
+
+/* ---------- TTS ---------- */
+let voices=[];
+/* 过滤 macOS/Windows 上会说人话之外的特效/玩具语音 */
+const NOVELTY_VOICES=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Wobble|Fred|Good News|Jester|Junior|Kathy|Organ|Superstar|Trinoids|Whisper|Zarvox|Ralph|Deranged|Hysterical|Pipe Organ|Princess|Grandma|Grandpa|Rocko)( |$)/i;
+/* 高质量英音优先级：越靠前越优先自动选 */
+const VOICE_RANK=[
+  /Google.*UK/i, /Microsoft.*(Libby|Sonia|Ryan).*en-GB/i,
+  /^Daniel/i, /Microsoft.*George.*en-GB/i,
+  /Google.*US/i, /Microsoft.*(Aria|Jenny|Guy)/i,
+  /^Samantha/i, /^Karen/i, /^Moira/i,
+];
+function scoreVoice(v){
+  if(NOVELTY_VOICES.test(v.name))return 999;
+  const lang=v.lang.replace('_','-');
+  if(!/^en\b/i.test(lang))return 900;               // 非英语最靠后
+  for(let i=0;i<VOICE_RANK.length;i++) if(VOICE_RANK[i].test(v.name))return i;
+  if(lang.toLowerCase().startsWith('en-gb'))return 50;
+  if(lang.toLowerCase().startsWith('en-au'))return 55;
+  if(lang.toLowerCase().startsWith('en-us'))return 60;
+  return 80;
+}
+function loadVoices(){
+  voices=speechSynthesis.getVoices();
+  /* 只保留英语，且排除玩具音 */
+  voices=voices.filter(v=>/^en\b/i.test(v.lang.replace('_','-'))&&!NOVELTY_VOICES.test(v.name));
+  voices.sort((a,b)=>scoreVoice(a)-scoreVoice(b));
+  const sel=document.getElementById('optVoice');sel.innerHTML='';
+  voices.forEach(v=>{
+    const o=document.createElement('option');o.value=v.name;
+    const flag=/GB/i.test(v.lang)?'🇬🇧':/AU/i.test(v.lang)?'🇦🇺':/US/i.test(v.lang)?'🇺🇸':/IE/i.test(v.lang)?'🇮🇪':/IN/i.test(v.lang)?'🇮🇳':'🌐';
+    const star=scoreVoice(v)<10?' ⭐':'';
+    o.textContent=flag+' '+v.name.replace(/Microsoft |Google /,'')+star;
+    sel.appendChild(o);
+  });
+  /* 恢复用户上次选择；若无则自动选评分最高（英音优先） */
+  const saved=localStorage.getItem('ielts_voice');
+  if(saved && voices.some(v=>v.name===saved)) sel.value=saved;
+  else if(voices.length) sel.value=voices[0].name;
+  sel.onchange=()=>localStorage.setItem('ielts_voice',sel.value);
+}
+speechSynthesis.onvoiceschanged=loadVoices;loadVoices();
+let _audioEl=null;
+function playFile(url,onFail){
+  if(!_audioEl){_audioEl=new Audio();}
+  _audioEl.pause();_audioEl.src=url;
+  const r=parseFloat(document.getElementById('optRate').value)||0.9;
+  _audioEl.playbackRate=Math.max(.5,Math.min(1.4,r*1.1));
+  const p=_audioEl.play();
+  if(p&&p.catch) p.catch(()=>onFail&&onFail());
+}
+function speak(t){
+  const k=(t||'').toLowerCase().trim();
+  const fn=AUDIO_MAP&&AUDIO_MAP[k];
+  if(fn){
+    playFile('audio/'+fn,()=>speakTTS(t));
+    return;
+  }
+  speakTTS(t);
+}
+function speakTTS(t){
+  if(!('speechSynthesis'in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);
+  const v=voices.find(x=>x.name===document.getElementById('optVoice').value);
+  if(v){u.voice=v;u.lang=v.lang;}else u.lang='en-GB';
+  u.rate=parseFloat(document.getElementById('optRate').value)||0.9;
+  u.pitch=1;u.volume=1;
+  speechSynthesis.speak(u);
+}
+function norm(s){return (s||'').toLowerCase().replace(/\s+/g,' ').trim();}
+function dotsHtml(box){let h='<span class="dots">';for(let i=1;i<=5;i++){const c=box>=i?(box>=4?'m':'f'):'';h+='<i class="'+c+'"></i>';}return h+'</span>';}
+
+/* ---------- view switching ---------- */
+const V=['dashView','chapterView','listView','immView','resultView'];
+function hideAll(){V.forEach(id=>document.getElementById(id).classList.add('hidden'));}
+function showPracticeChrome(on){
+  document.getElementById('pbar').classList.toggle('hidden',!on);
+}
+function crumbHome(){return '<a onclick="goHome()">🏠 首页</a>';}
+function goHome(){
+  hideAll();showPracticeChrome(false);
+  document.getElementById('dashView').classList.remove('hidden');
+  document.getElementById('crumb').innerHTML='';
+  renderDash();
+}
+window.goHome=goHome;window.openChapter=openChapter;
+document.getElementById('homeBtn').onclick=goHome;
+document.getElementById('backHome').onclick=goHome;
+
+/* ---------- dashboard ---------- */
+function renderDash(){
+  const s=stats(allWords());
+  document.getElementById('heroPct').innerHTML=s.pct+'<small>%</small>';
+  document.getElementById('heroRing').style.setProperty('--p',s.pct);
+  document.getElementById('heroRing').style.setProperty('--c',s.pct>=80?'var(--green)':'var(--accent)');
+  document.getElementById('stMastered').textContent=s.mastered;
+  document.getElementById('stLearning').textContent=s.learning;
+  document.getElementById('stNew').textContent=s.newN;
+  document.getElementById('stAcc').textContent=s.seen?Math.round(s.cor/s.seen*100)+'%':'—';
+  const grid=document.getElementById('chapterGrid');grid.innerHTML='';
+  CH.forEach((c,ci)=>{
+    const cs=stats(chapterWords(ci));
+    const card=document.createElement('div');card.className='chcard';
+    card.innerHTML='<div class="miniring" style="--p:'+cs.pct+';--c:'+(cs.pct>=80?'var(--green)':'var(--accent)')+'"><span class="e">'+c.emoji+'</span></div>'
+      +'<div class="chmeta"><div class="n">'+c.name+'</div>'
+      +'<div class="s">掌握 '+cs.mastered+' · 学习中 '+cs.learning+' · 未学 '+cs.newN+(cs.acc!=null?' · 正确率 '+cs.acc+'%':'')+'</div>'
+      +segBar(cs)+'</div>';
+    card.onclick=()=>openChapter(ci);
+    grid.appendChild(card);
+  });
+}
+
+/* ---------- chapter detail ---------- */
+let curChapter=0;
+function openChapter(ci){
+  curChapter=ci;hideAll();showPracticeChrome(false);
+  document.getElementById('chapterView').classList.remove('hidden');
+  document.getElementById('crumb').innerHTML=crumbHome()+'<span class="sep">›</span><span class="cur">'+CH[ci].emoji+' '+CH[ci].name+'</span>';
+  document.getElementById('chTitle').textContent=CH[ci].emoji+' '+CH[ci].name;
+  const list=document.getElementById('topicList');list.innerHTML='';
+  TOPICS.forEach((t,ti)=>{
+    if(t.ch!==ci)return;
+    const ts=stats(t.words);
+    const row=document.createElement('div');row.className='toprow';
+    const accHtml=ts.acc!=null?'<span class="accpill '+(ts.acc>=80?'good':(ts.acc<60?'bad':''))+'">正确率 '+ts.acc+'%</span>':'<span class="accpill">未练习</span>';
+    row.innerHTML='<div class="tinfo"><div class="tn">'+t.title+'</div>'
+      +'<div class="ts">'+t.words.length+' 词 · 掌握 '+ts.mastered+' · 学习中 '+ts.learning+' · 未学 '+ts.newN+'</div>'
+      +segBar(ts)+'</div>'
+      +accHtml
+      +'<div class="pctbadge '+(ts.pct>=80?'done':'')+'">'+ts.pct+'%</div>'
+      +'<button class="btn primary sm">练习</button>';
+    row.querySelector('button').onclick=(e)=>{e.stopPropagation();startPractice(t.words,t.title);};
+    list.appendChild(row);
+  });
+}
+document.getElementById('practiceChapter').onclick=()=>startPractice(chapterWords(curChapter),CH[curChapter].name+' · 整章');
+document.getElementById('practiceChapterWeak').onclick=()=>{
+  const w=chapterWords(curChapter).filter(x=>rec(x.w).box<4);
+  if(!w.length){alert('本章已全部掌握 🎉');return;}
+  startPractice(w,CH[curChapter].name+' · 薄弱词');
+};
+document.getElementById('quickAll').onclick=()=>{curChapter=null;startPractice(allWords(),'全部话题');};
+document.getElementById('quickWeak').onclick=()=>{
+  let w=allWords().filter(x=>rec(x.w).box<4);
+  w.sort((a,b)=>rec(a.w).box-rec(b.w).box);
+  w=w.slice(0,60);
+  if(!w.length){alert('全部已掌握 🎉');return;}
+  curChapter=null;startPractice(w,'薄弱词专练 (最多60词)');
+};
+document.getElementById('resetBtn').onclick=()=>{if(confirm('确定清空所有熟练度记录？')){store={};save();renderDash();}};
+
+/* ---------- practice engine ---------- */
+let mode='list',queue=[],results=[],immPos=0,immAnswered=false,curLabel='';
+document.getElementById('mList').onclick=()=>setMode('list');
+document.getElementById('mImm').onclick=()=>setMode('imm');
+function setMode(m){mode=m;document.getElementById('mList').classList.toggle('on',m==='list');document.getElementById('mImm').classList.toggle('on',m==='imm');if(queue.length)render();}
+document.getElementById('tEn').onchange=()=>{if(queue.length&&mode==='list')renderList();else if(queue.length)renderImm();};
+document.getElementById('tCn').onchange=()=>{if(queue.length&&mode==='list')renderList();else if(queue.length)renderImm();};
+document.getElementById('exitBtn').onclick=()=>{ if(curChapter!=null&&document.getElementById('crumb').innerHTML)openChapter(curChapter);else goHome();};
+
+function startPractice(words,label){
+  curLabel=label;
+  queue=words.map(w=>({w:w.w,h:w.h}));
+  if(document.getElementById('optShuffle').checked)
+    for(let i=queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[queue[i],queue[j]]=[queue[j],queue[i]];}
+  results=queue.map(()=>({done:false,correct:false,your:''}));
+  immPos=0;
+  hideAll();showPracticeChrome(true);
+  let cr=crumbHome();
+  if(curChapter!=null) cr+='<span class="sep">›</span><a onclick="openChapter('+curChapter+')">'+CH[curChapter].emoji+' '+CH[curChapter].name+'</a>';
+  cr+='<span class="sep">›</span><span class="cur">✍️ '+label+'</span>';
+  document.getElementById('crumb').innerHTML=cr;
+  render();
+}
+function updateProgress(){const d=results.filter(r=>r.done).length;document.getElementById('count').textContent=d+'/'+queue.length;document.getElementById('prog').style.width=(queue.length?d/queue.length*100:0)+'%';}
+function render(){document.getElementById('resultView').classList.add('hidden');if(mode==='list')renderList();else renderImm();updateProgress();}
+
+function rowInner(i){
+  const item=queue[i],r=results[i],box=rec(item.w).box;
+  const showEn=document.getElementById('tEn').checked,showCn=document.getElementById('tCn').checked;
+  let inner='<span class="spk" data-i="'+i+'">🔊</span>';
+  if(showEn)inner+='<span class="p-en">'+item.w+'</span>';
+  if(showCn)inner+='<span class="p-cn">'+item.h+'</span>';
+  if(!showEn&&!showCn)inner+='<span class="placeholder">🎧 听发音拼写</span>';
+  inner+=dotsHtml(box);
+  const af=r.done?(r.correct?'correct':'wrong'):'';
+  return '<div class="idx">'+(i+1)+'</div>'
+    +'<div class="prompt'+(showEn&&showCn?' p-both':'')+'">'+inner+'</div>'
+    +'<div><div class="ansfield '+af+'"><input data-i="'+i+'" value="'+r.your.replace(/"/g,'&quot;')+'" '+(r.done?'readonly':'')+' autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="输入…">'
+    +(r.done?('<span class="mark">'+(r.correct?'✓':'✗')+'</span>'):'<span class="cat">🐱</span>')+'</div>'
+    +(r.done&&!r.correct?('<div class="sol">正确：<b>'+item.w+'</b></div>'):'')+'</div>';
+}
+function wireRow(el,i){
+  el.querySelector('.spk').onclick=()=>speak(queue[i].w);
+  const inp=el.querySelector('input');
+  inp.addEventListener('focus',()=>{if(!results[i].done)speak(queue[i].w);});
+  inp.addEventListener('keydown',e=>{
+    if(e.isComposing||e.keyCode===229)return;              // 输入法(IME)组合中，忽略回车
+    if(e.key==='Tab'){e.preventDefault();speak(queue[i].w);}
+    else if(e.key==='Enter'){e.preventDefault();listCheck(i);}
+  });
+}
+function renderList(){
+  document.getElementById('immView').classList.add('hidden');document.getElementById('resultView').classList.add('hidden');
+  const lv=document.getElementById('listView');lv.classList.remove('hidden');
+  lv.innerHTML='';
+  queue.forEach((item,i)=>{
+    const row=document.createElement('div');row.className='item';row.id='it'+i;
+    row.innerHTML=rowInner(i);
+    lv.appendChild(row);wireRow(row,i);
+  });
+  const fu=queue.findIndex((_,i)=>!results[i].done);
+  focusRow(fu>=0?fu:0,false);
+}
+function updateRow(i){
+  const el=document.getElementById('it'+i);if(!el)return;
+  el.innerHTML=rowInner(i);wireRow(el,i);
+}
+function focusRow(i,doSpeak){
+  const el=document.getElementById('listView').querySelector('input[data-i="'+i+'"]');
+  if(el){el.focus();el.select&&el.select();}
+}
+function listCheck(i){
+  const item=queue[i],r=results[i];
+  const el=document.getElementById('it'+i);const inp=el?el.querySelector('input'):null;
+  const val=inp?inp.value.trim():'';
+  if(!r.done && val){                       // 有输入才判分；空回车直接跳到下一个
+    r.done=true;r.your=val;r.correct=norm(val)===norm(item.w);grade(item.w,r.correct);
+    updateRow(i);updateProgress();
+  }
+  // 按位置前进到下一行；到末尾若还有未完成则收尾
+  if(i<queue.length-1){focusRow(i+1,true);}
+  else if(results.every(x=>x.done)){finish();}
+  else{const fu=results.findIndex(x=>!x.done);if(fu>=0)focusRow(fu,true);}
+}
+
+function renderImm(){
+  document.getElementById('listView').classList.add('hidden');document.getElementById('resultView').classList.add('hidden');
+  const iv=document.getElementById('immView');iv.classList.remove('hidden');
+  const fu=queue.findIndex((_,i)=>!results[i].done);if(fu>=0)immPos=fu;
+  immAnswered=false;const item=queue[immPos];
+  document.getElementById('immTopic').textContent=curLabel+'  '+dotsPlain(rec(item.w).box);
+  document.getElementById('immCn').textContent=document.getElementById('tCn').checked?item.h:'';
+  document.getElementById('immEn').textContent=document.getElementById('tEn').checked?item.w:'';
+  const inp=document.getElementById('immInput');inp.value='';inp.className='';inp.disabled=false;inp.focus();
+  document.getElementById('immFb').innerHTML='';document.getElementById('immCheck').textContent='检查 (Enter)';
+  updateProgress();setTimeout(()=>speak(item.w),150);
+}
+function dotsPlain(box){let s='';for(let i=1;i<=5;i++)s+=box>=i?'●':'○';return s;}
+function immCheck(){
+  const item=queue[immPos],inp=document.getElementById('immInput');
+  if(!immAnswered){const val=inp.value.trim();if(!val){speak(item.w);return;}
+    immAnswered=true;inp.disabled=true;const correct=norm(val)===norm(item.w);
+    results[immPos]={done:true,correct,your:val};grade(item.w,correct);
+    const fb=document.getElementById('immFb');
+    if(correct){inp.className='correct';fb.innerHTML='✅ <span class="ok">'+item.w+'</span> <span style="color:#4b5162">'+item.h+'</span>';}
+    else{inp.className='wrong';fb.innerHTML='正确：<span class="ok">'+item.w+'</span><span class="bad">'+val+'</span> <span style="color:#4b5162">'+item.h+'</span>';}
+    document.getElementById('immCheck').textContent='下一个 (Enter)';updateProgress();
+  }else immNext();
+}
+function immNext(){const nxt=queue.findIndex((_,k)=>k>immPos&&!results[k].done);if(nxt>=0){immPos=nxt;renderImm();}else{const any=queue.findIndex((_,k)=>!results[k].done);if(any>=0){immPos=any;renderImm();}else finish();}}
+document.getElementById('immCheck').onclick=immCheck;
+document.getElementById('immReplay').onclick=()=>speak(queue[immPos].w);
+document.getElementById('immSpk').onclick=()=>speak(queue[immPos].w);
+document.getElementById('immSkip').onclick=()=>{if(immAnswered){immNext();return;}const item=queue[immPos],inp=document.getElementById('immInput');immAnswered=true;inp.disabled=true;inp.className='wrong';results[immPos]={done:true,correct:false,your:'（不会）'};grade(item.w,false);document.getElementById('immFb').innerHTML='正确：<span class="ok">'+item.w+'</span> <span style="color:#4b5162">'+item.h+'</span>';document.getElementById('immCheck').textContent='下一个 (Enter)';updateProgress();};
+document.getElementById('immInput').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();speak(queue[immPos].w);}else if(e.key==='Enter'){e.preventDefault();immCheck();}});
+
+function finish(){
+  const done=results.filter(r=>r.done),ok=done.filter(r=>r.correct).length;
+  const wrong=queue.map((q,i)=>({q,r:results[i]})).filter(x=>x.r.done&&!x.r.correct);
+  hideAll();showPracticeChrome(false);
+  const rv=document.getElementById('resultView');rv.classList.remove('hidden');
+  rv.innerHTML='<div class="card"><h2 style="margin:0">🎉 完成 · '+curLabel+'</h2>'
+    +'<div class="score">'+ok+' / '+done.length+(done.length?'  ('+Math.round(ok/done.length*100)+'%)':'')+'</div>'
+    +(wrong.length?('<div class="review"><h3>❌ 需复习 ('+wrong.length+')</h3>'+wrong.map(x=>'<div class="rw"><span><span class="ok">'+x.q.w+'</span> <span style="color:#4b5162">'+x.q.h+'</span></span><span class="your">你：'+x.r.your+'</span></div>').join('')+'</div>'):'<p style="color:var(--green)">🌟 全部正确！</p>')
+    +'<div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">'
+    +(wrong.length?'<button class="btn primary" id="rWrong">只练错词</button>':'')
+    +'<button class="btn" id="rAgain">再来一次</button>'
+    +(curChapter!=null?'<button class="btn" id="rChap">返回本章</button>':'')
+    +'<button class="btn ghost" id="rHome">返回面板</button></div></div>';
+  const rw=document.getElementById('rWrong');if(rw)rw.onclick=()=>startPractice(wrong.map(x=>({w:x.q.w,h:x.q.h})),curLabel+' · 错词');
+  document.getElementById('rAgain').onclick=()=>startPractice(queue.map(q=>({w:q.w,h:q.h})),curLabel);
+  const rc=document.getElementById('rChap');if(rc)rc.onclick=()=>openChapter(curChapter);
+  document.getElementById('rHome').onclick=goHome;
+}
+
+/* init */
+goHome();
+</script>
+</body>
+</html>
